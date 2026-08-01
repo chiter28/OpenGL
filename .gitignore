@@ -1,0 +1,11 @@
+# Сгенерированные папки сборки CMake
+build/
+bin/
+out/
+
+
+
+# Файлы проектов Visual Studio
+.vs/
+*.vcxproj*
+*.sln
