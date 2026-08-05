@@ -2,6 +2,28 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#include "Utils.h"
+#include <fstream>
+
+#include "Renderer/Buffer.h"
+#include "Renderer/Shader.h"
+
+
+
+void update_uniform(Shader& shader)
+{
+    static float s_scale = 0.0f;
+    static float s_delta = 0.002f;
+
+    s_scale += s_delta;
+    if (s_scale >= 1.0f || s_scale <= -1.0f)
+        s_delta *= -1.0f;
+
+    shader.SetFloat("u_Scale", s_scale);
+}
+
+
+
 void set_new_framebuffer_size(GLFWwindow* window, int32_t width, int32_t height)
 {
     glViewport(0, 0, width, height);
@@ -13,6 +35,7 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
     }
 }
+
 
   
 
@@ -43,23 +66,56 @@ int main()
 
     glfwSetFramebufferSizeCallback(window, set_new_framebuffer_size);
 
-    float c = 0;
+
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CW);
+
+    Vec3f Vertices[3];
+    Vertices[0] = Vec3f(-1.0f, -1.0f, 0.0f);
+    Vertices[1] = Vec3f( 0.0f,  1.0f, 0.0f);
+    Vertices[2] = Vec3f( 1.0f, -1.0f, 0.0f);
+
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+
+    VertexBuffer VertexBuf(sizeof(Vertices), reinterpret_cast<float*>(Vertices));
+
+
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    VertexBuf.Bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0,0);
+
+    glClearColor(0.0, 0.3f, 0.3f, 1.0f);
+
+    Shader Shader("../Resources/shaders/shader.glsl");
+
+    Shader.Bind();
+
 
     while (!glfwWindowShouldClose(window)) {
 
+        glClear(GL_COLOR_BUFFER_BIT);
         processInput(window);
         
-        c = (c < 1.0 ? c += 1.0 / 256.0 : c = 0.0);
-        std::cout << c << '\n';
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
 
-        glClearColor(c, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        update_uniform(Shader);
+      
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+
+    glDisableVertexAttribArray(0);
     glfwTerminate();
     return 0;
 }
