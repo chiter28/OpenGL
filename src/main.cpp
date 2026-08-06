@@ -12,14 +12,17 @@
 
 void update_uniform(Shader& shader)
 {
-    static float s_scale = 0.0f;
-    static float s_delta = 0.002f;
+    static float s_angleRad = 0.0f;
+    static float s_delta = 0.0001f;
 
-    s_scale += s_delta;
-    if (s_scale >= 1.0f || s_scale <= -1.0f)
+    s_angleRad += s_delta;
+    if (s_angleRad >= 1.57f || s_angleRad <= -1.57f)
         s_delta *= -1.0f;
 
-    shader.SetFloat("u_Scale", s_scale);
+    mat4 Rotation;
+    
+
+    shader.SetMat4("uTranslation", Rotation.rotate(s_angleRad, vec3(1, 0, 0)));
 }
 
 
@@ -70,10 +73,10 @@ int main()
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CW);
 
-    Vec3f Vertices[3];
-    Vertices[0] = Vec3f(-1.0f, -1.0f, 0.0f);
-    Vertices[1] = Vec3f( 0.0f,  1.0f, 0.0f);
-    Vertices[2] = Vec3f( 1.0f, -1.0f, 0.0f);
+    vec3 Vertices[3];
+    Vertices[0] = vec3(-1.0f, -1.0f, 0.0f);
+    Vertices[1] = vec3( 0.0f,  1.0f, 0.0f);
+    Vertices[2] = vec3( 1.0f, -1.0f, 0.0f);
 
     GLuint VAO;
     glGenVertexArrays(1, &VAO);

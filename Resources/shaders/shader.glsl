@@ -1,13 +1,13 @@
 #type vertex
 #version 450 core
 
-uniform float u_Scale;
+uniform mat4 uTranslation;
 
 layout (location = 0) in vec3 Position;
 
 void main()
 {
-	gl_Position = vec4(u_Scale * Position.x, u_Scale * Position.y, u_Scale * Position.z, 1.0);
+	gl_Position = uTranslation * vec4(Position, 1.0);
 }
 
 

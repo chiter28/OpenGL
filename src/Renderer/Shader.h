@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include "Utils.h"
 
 
 class Shader
@@ -13,6 +14,7 @@ public:
 	void Unbind() const;
 
 	void SetFloat(const std::string& name, float value);
+	void SetMat4(const std::string& name, const mat4& matrix);
 
 private:
 	std::string ReadFile(const std::string& filePath);
