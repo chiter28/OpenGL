@@ -1,13 +1,17 @@
 #type vertex
 #version 450 core
 
-uniform mat4 uTranslation;
+layout (location = 0) in vec3 aPosition;
+layout (location = 1) in vec3 aColor;
 
-layout (location = 0) in vec3 Position;
+out vec3 Color;
+
+uniform mat4 uTranslation;
 
 void main()
 {
-	gl_Position = uTranslation * vec4(Position, 1.0);
+	gl_Position = uTranslation * vec4(aPosition, 1.0);
+	Color = aColor;
 }
 
 
@@ -15,9 +19,10 @@ void main()
 #type fragment
 #version 450 core
 
-layout (location = 0) out vec4 o_Color;
+in vec3 Color;
+layout (location = 0) out vec4 outColor;
 
 void main()
 {
-	o_Color = vec4(1.0, 0.3, 0.7, 1.0);
+	outColor = vec4(Color, 1.0);
 }

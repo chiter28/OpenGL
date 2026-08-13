@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(OpenGL CXX C)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
@@ -40,9 +40,12 @@ add_executable(OpenGL
 	src/Renderer/Shader.cpp
 	src/Renderer/Shader.h
 
+	src/Renderer/VertexArray.cpp
+	src/Renderer/VertexArray.h
+
 
 	src/main.cpp
-	include/Utils.h
+	src/Utils.h
 )
 
 target_include_directories(OpenGL PRIVATE
