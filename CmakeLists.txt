@@ -32,26 +32,47 @@ target_include_directories(glad PUBLIC external/glad/include)
 
 # --- Executable --- #
 	
-add_executable(OpenGL
-
-	src/Renderer/Buffer.cpp
-	src/Renderer/Buffer.h
-
-	src/Renderer/Shader.cpp
-	src/Renderer/Shader.h
-
-	src/Renderer/VertexArray.cpp
-	src/Renderer/VertexArray.h
-
-
-	src/main.cpp
-	src/Utils.h
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+	"src/*.cpp"
+	"src/*.c"
 )
 
-target_include_directories(OpenGL PRIVATE
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
+	"src/*.h"
+	"src/*.hpp"
+)
+
+#source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "src" FILES ${SOURCES} ${HEADERS})
+
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+
+add_compile_definitions(
+	GLM_FORCE_INLINE                   # Принудительный инлайнинг всех математических функций
+    GLM_FORCE_INTRINSICS               # Включение SIMD (SSE2/AVX/NEON)
+    GLM_FORCE_DEFAULT_ALIGNED_GENTYPES # Выравнивание данных в памяти по 16 байт (для SIMD)
+)
+
+if(MSVC)
+	target_compile_options(${PROJECT_NAME} PRIVATE
+		$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/02;/0i;/0t;/fp-fast>
+		$<$<CONFIG:Debug>:/0d;/RTC1;/Zi>
+	)
+endif()
+
+
+target_include_directories(${PROJECT_NAME} PRIVATE
 	external/glad/include
-	${CMAKE_CURRENT_SOURCE_DIR}/include
+	external/glm
+	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
 
 # Линкуем  glfw и glad (без OpenGL::GL)
 target_link_libraries(OpenGL PRIVATE glfw glad)
+
+# Copy /Resources dir to dir with .exe file
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	"${CMAKE_CURRENT_SOURCE_DIR}/Resources"
+	"$<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources"
+)

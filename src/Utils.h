@@ -4,27 +4,56 @@
 #include <random>
 
 #define DegtoRad(degrees) ((degrees) * std::numbers::pi / 180.0f)
+#define RadtoDeg(radians) ((radians) * 180.0f / std::numbers::pi)
+
+
+
+
+
+
+
+
+
+
 
 struct vec3
 {
-	float x, y, z;
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
+		
 
 public:
-	vec3(float _x = 0.0f, float _y = 0.0f, float _z = 0.0f)
-		: x(_x), y(_y), z(_z) {}
+	vec3() = default;
+	vec3(float _x, float _y, float _z);
 	
-	vec3(float f)
-		: x(f), y(f), z(f) {}
+	explicit vec3(float f);
 
-	float length() {
-		return std::sqrt(x * x + y * y + z * z);
-	}
+	float length() const;
 
-	static float dot(const vec3& a, const vec3& b)
-	{
-		return a.x * b.x + a.y * b.y + a.z * b.z;
-	}
+	vec3 operator+ (vec3 other);
+	
+	vec3 operator- () const;
 
+
+	vec3& operator+= (vec3 other);
+
+	vec3& operator-= (vec3 other);
+
+
+	vec3 operator* (vec3 other);
+
+	vec3 operator* (float number);
+	
+	vec3 normalized() const;
+
+	vec3& normalized();
+
+	float dot(const vec3& b) const;
+
+	vec3 cross(const vec3& other) const;
+
+	vec3& rotate(float angle, const vec3& axis);
 };
 
 
@@ -46,13 +75,7 @@ public:
 		identity();
 	}
 
-	void identity()
-	{
-		for (int i = 0; i < 16; i++) {
-			m[i] = 0.0f;
-		}
-		m[0] = m[5] = m[10] = m[15] = 1.0f;
-	}
+	
 
 	mat4 operator* (const mat4& other) const
 	{
@@ -75,7 +98,9 @@ public:
 
 
 	const float& operator[] (int index) const {
-		return m[index];
+		if (index < 16)
+			return m[index];
+		return -1;
 	}
 
 	float* value_ptr() { return m; }
@@ -92,50 +117,62 @@ public:
 		m[14] = z;
 	}
 
-	static mat4 translate(const vec3& v)
+	mat4& translate(const vec3& v)
 	{
-		mat4 result;
-		result[12] = v.x;
-		result[13] = v.y;
-		result[14] = v.z;
-		return result;
+		m[12] = v.x;
+		m[13] = v.y;
+		m[14] = v.z;
+		return *this;
 	}
 
-	static mat4 rotate(float angleRad, vec3 axis)
+	mat4& rotate(float angleDegree, const vec3& axis)
 	{
-		mat4 res;
-		float cos = std::cos(angleRad);
-		float sin = std::sin(angleRad);
+		float rad = DegtoRad(angleDegree);
+		float cos = std::cos(rad);
+		float sin = std::sin(rad);
 
-		if (axis.x == 1.0f) {
-			res[5] = cos;
-			res[6] = sin;
-			res[9] = -sin;
-			res[10] = cos;
+		mat4 rotation;
+
+		if (axis.x != 0.0f) {
+			rotation[5] = cos;
+			rotation[6] = sin;
+			rotation[9] = -sin;
+			rotation[10] = cos;
 		}
-		else if (axis.y == 1.0f) {
-			res[0] = cos;
-			res[2] = sin;
-			res[8] = -sin;
-			res[10] = cos;
+		else if (axis.y != 0.0f) {
+			rotation[0] = cos;
+			rotation[2] = -sin;
+			rotation[8] = sin;
+			rotation[10] = cos;
 
 		}
-		else if (axis.z == 1.0f) {
-			res[0] = cos;
-			res[1] = sin;
-			res[4] = -sin;
-			res[5] = cos;
+		else if (axis.z != 0.0f) {
+			rotation[0] = cos;
+			rotation[1] = sin;
+			rotation[4] = -sin;
+			rotation[5] = cos;
 		}
-		return res;
+		*this = *this * rotation;
+		return *this;
 	}
 
-	static mat4 scale(const vec3& vector)
+	mat4& rotate(const vec3& anglesDegree)
 	{
-		mat4 result;
-		result[0] = vector.x;
-		result[5] = vector.y;
-		result[10] = vector.z;
-		return result;
+		if (anglesDegree.x != 0.0f)
+			rotate(anglesDegree.x, { 1.0f, 0.0f, 0.0f });
+		if (anglesDegree.y != 0.0f)
+			rotate(anglesDegree.y, { 0.0f, 1.0f, 0.0f });
+		if (anglesDegree.z != 0.0f)
+			rotate(anglesDegree.z, { 0.0f, 0.0f, 1.0f });
+		return *this;
+	}
+
+	mat4& scale(const vec3& vector)
+	{
+		m[0] = vector.x;
+		m[5] = vector.y;
+		m[10] = vector.z;
+		return *this;
 	}
 
 		// Column - Major(по столбцам)
@@ -143,55 +180,119 @@ public:
 		// [ m[1]  m[5]  m[9]   m[13]
 		// [ m[2]  m[6]  m[10]  m[14]
 		// [ m[3]  m[7]  m[11]  m[15]
-	static mat4 perspective(float fovDegrees, float aspectRatio, float zNear, float zFar)
+	mat4& perspective(float fovDegrees, float aspectRatio, float zNear, float zFar)
 	{
-		mat4 result;
-		for (int i = 0; i < 16; ++i) result[i] = 0.0f;
+		for (int i = 0; i < 16; ++i) m[i] = 0.0f;
 
 		float tanHalfFOV = std::tan(DegtoRad(fovDegrees / 2.0f)); // tg(Alpha/2)
 
-		result[0] = 1.0f / (aspectRatio * tanHalfFOV);
-		result[5] = 1.0f / tanHalfFOV;
+		m[0] = 1.0f / (aspectRatio * tanHalfFOV);
+		m[5] = 1.0f / tanHalfFOV;
 
 		// Z-mapping в NDC [-1, 1]
-		result[10] = -(zFar + zNear) / (zFar - zNear);
+		m[10] = -(zFar + zNear) / (zFar - zNear);
 
 		// Смещение по Z 
-		result[14] = -(2.0f * zFar * zNear) / (zFar - zNear);
+		m[14] = -(2.0f * zFar * zNear) / (zFar - zNear);
 
 		// Запись -Z в W-компоненту для перспективного деления
-		result[11] = -1.0f;
+		m[11] = -1.0f;
 		
-		return result;
+		return *this;
 	}
 
-
-	static mat4 camera(vec3 cameraPosition, vec3 u, vec3 v, vec3 n)
-	{
-		mat4 result;
-
-		result[0] = u.x;
-		result[1] = v.x;
-		result[2] = n.x;
-
-		result[4] = u.y;
-		result[5] = v.y;
-		result[6] = n.y;
-		
-		result[8]  = u.z;
-		result[9]  = v.z;
-		result[10] = n.z;
-
-		result[12] = -u.x * cameraPosition.x - u.y * cameraPosition.y - u.z * cameraPosition.z;
-		result[13] = -v.x * cameraPosition.x - v.y * cameraPosition.y - v.z * cameraPosition.z;
-		result[14] = -n.x * cameraPosition.x - n.y * cameraPosition.y - n.z * cameraPosition.z;
 	
-		return result;
+	mat4& cameraRotate(const vec3& target, const vec3& up)
+	{
+		vec3 n = (-target).normalized(); // forward, n vector must targeting to positive z axis
+
+		vec3 u = up.cross(n).normalized(); // right
+
+		vec3 v = n.cross(u); // up
+	
+		m[0] = u.x;
+		m[1] = v.x;
+		m[2] = n.x;
+
+		m[4] = u.y;
+		m[5] = v.y;
+		m[6] = n.y;
+
+		m[8] = u.z;
+		m[9] = v.z;
+		m[10] = n.z;
+
+		return *this;
 	}
 
+	mat4& InitCameraTransform(const vec3 position, const vec3& target, const vec3& up)
+	{
+		mat4 CameraTranslation;
+		CameraTranslation.translate({ -position.x, -position.y, -position.z });
+
+		mat4 CameraRotate;
+		CameraRotate.cameraRotate(target, up);
+
+		return *this =  CameraRotate * CameraTranslation;
+	}
+
+private:
+	void identity()
+	{
+		for (int i = 0; i < 16; i++) {
+			m[i] = 0.0f;
+		}
+		m[0] = m[5] = m[10] = m[15] = 1.0f;
+	}
 }; 
 
 
+struct Quat
+{
+	float w = 0.0f;
+	vec3 V;
+
+	static Quat fromAngleAxis(float angle, const vec3& axis) // axis of rotation
+	{
+		vec3 normal = axis.normalized();
+		float halfAngleRad = DegtoRad(angle / 2.0f);
+		
+		return Quat(cos(halfAngleRad),
+			vec3(sin(halfAngleRad) * normal.x,
+				 sin(halfAngleRad) * normal.y,
+				 sin(halfAngleRad) * normal.z
+			)
+		);
+
+	}
+
+	Quat(float w, const vec3& V) 
+		: w(w), V(V) {}
+
+
+	Quat Conjugate() const
+	{
+		return Quat(w, vec3(-V.x, -V.y, -V.z));
+	}
+
+	Quat operator* (const vec3& vector) const
+	{
+		Quat VecQuat(0.0f, vector);
+
+		return *this * VecQuat;
+
+	}
+
+	Quat operator* (const Quat& quat) const
+	{
+		return Quat((w * quat.w) - (V.x * quat.V.x) - (V.y * quat.V.y) - (V.z * quat.V.z),  // w
+			vec3((w * quat.V.x) + (quat.w * V.x) + (V.y * quat.V.z) - (V.z * quat.V.y),    // V.x
+				 (w * quat.V.y) + (quat.w * V.y) + (V.z * quat.V.x) - (V.x * quat.V.z),   // V.y
+				 (w * quat.V.z) + (quat.w * V.z) + (V.x * quat.V.y) - (V.y * quat.V.x))  // V.z
+		);
+	}
+
+};
 
 
 
