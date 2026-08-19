@@ -16,6 +16,7 @@ void WorldTransformation::SetPosition(vec3 position)
 	m_Position = position;
 }
 
+#include "WindowManager.h"
 
 void WorldTransformation::Rotate(vec3 anglesDegree)
 {

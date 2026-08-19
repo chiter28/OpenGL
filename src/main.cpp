@@ -14,103 +14,20 @@
 
 #include "Renderer/WorldTransformation.h"
 
-
+#include "Renderer/WindowManager.h"
 
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-void CheckGLMSIMD()
-{
-    std::cout << "=== GLM SIMD Configuration Check ===" << std::endl;
-
-    // 1. Проверка макросов архитектуры самого GLM
-#if GLM_ARCH & GLM_ARCH_AVX2_BIT
-    std::cout << "[GLM] AVX2 Instruction Set: ENABLED" << std::endl;
-#elif GLM_ARCH & GLM_ARCH_AVX_BIT
-    std::cout << "[GLM] AVX Instruction Set: ENABLED" << std::endl;
-#elif GLM_ARCH & GLM_ARCH_SSE42_BIT
-    std::cout << "[GLM] SSE4.2 Instruction Set: ENABLED" << std::endl;
-#elif GLM_ARCH & GLM_ARCH_SSE2_BIT
-    std::cout << "[GLM] SSE2 Instruction Set: ENABLED" << std::endl;
-#elif GLM_ARCH & GLM_ARCH_NEON_BIT
-    std::cout << "[GLM] ARM NEON Instruction Set: ENABLED" << std::endl;
-#else
-    std::cout << "[GLM] SIMD is DISABLED (Pure C++ fallback)" << std::endl;
-#endif
-
-    // 2. Проверка аппаратных макросов компилятора (Compiler-level intrinsics)
-    std::cout << "\n=== Compiler Level Intrinsics ===" << std::endl;
-
-#if defined(__AVX2__)
-    std::cout << "[Compiler] __AVX2__ is defined" << std::endl;
-#endif
-#if defined(__AVX__)
-    std::cout << "[Compiler] __AVX__ is defined" << std::endl;
-#endif
-#if defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
-    std::cout << "[Compiler] SSE2 is supported" << std::endl;
-#endif
-#if defined(__ARM_NEON) || defined(__ARM_NEON__)
-    std::cout << "[Compiler] ARM NEON is supported" << std::endl;
-#endif
-
-    // 3. Проверка размера и выравнивания типа vec4 в памяти
-    std::cout << "\n=== Memory & Alignment Info ===" << std::endl;
-    std::cout << "sizeof(glm::vec4): " << sizeof(glm::vec4) << " bytes" << std::endl;
-    std::cout << "alignof(glm::vec4): " << alignof(glm::vec4) << " bytes ";
-
-    if (alignof(glm::vec4) >= 16) {
-        std::cout << "(Correctly aligned for SIMD!)" << std::endl;
-    } else {
-        std::cout << "(NOT aligned for SIMD - check GLM_FORCE_DEFAULT_ALIGNED_GENTYPES)" << std::endl;
-    }
-}
 
 
-
-
-GLFWwindow* window;
 int windowWidth = 1920;
 int windowHeight = 1080;
+CameraHz cameraH;
 
 WorldTransformation CubeWorldTransform;
 Camera camera(windowWidth, windowHeight, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
-
-void update_uniform(Shader& shader)
-{
-    CubeWorldTransform.SetPosition(vec3(0.0f, 0.0f, -3.0f));
-    CubeWorldTransform.Rotate(vec3(0.0f, 0.05f, 0.0f));
-    CubeWorldTransform.SetScale(vec3(1.0f, 1.0f, 3.0f));
-    mat4 World = CubeWorldTransform.GetMatrix();
-
-
-    glfwSetKeyCallback(window,
-        [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-            camera.OnKeyboard(key);
-        });
-    
-    glfwSetCursorPosCallback(window,
-        [](GLFWwindow* window, double xPos, double yPos) {
-            camera.OnMouse((uint32_t)xPos, (uint32_t)yPos);
-        });
-
-    // Camera
-    
-    
-    mat4 View = camera.GetMatrix();
-   
-
-    // Perspective Projection
-    mat4 Projection; 
-    float aspectRatio = (float)windowWidth / windowHeight;
-    Projection.perspective(40, aspectRatio, 0.1, 15);
-
-
-    mat4 FinalTransform = Projection * View * World;
-
-    shader.SetMat4("uTranslation", FinalTransform);
-}
 
 
 
@@ -119,6 +36,8 @@ void set_new_framebuffer_size(GLFWwindow* window, int32_t width, int32_t height)
     glViewport(0, 0, width, height);
     windowWidth = width;
     windowHeight = height;
+
+    cameraH.SetViewportSize(width, height);
 }
 
 void processInput(GLFWwindow* window)
@@ -135,7 +54,6 @@ int main()
 {
 
 
-    // create window
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
@@ -144,25 +62,15 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
     GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
-
-    glfwSwapInterval(1);
-
-    window = glfwCreateWindow(mode->width, mode->height, "OpenGL Window", nullptr, nullptr);
-    if (!window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-
-    glfwMakeContextCurrent(window);
-
-    glfwSetFramebufferSizeCallback(window, set_new_framebuffer_size);
     
+    WindowManager windowManager(windowWidth, windowHeight, "App");
+
+    
+    glfwSwapInterval(1);
+    glfwSetFramebufferSizeCallback(windowManager.GetNativeWindow(), set_new_framebuffer_size);
+
     
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to init GLAD" << std::endl;
@@ -232,26 +140,39 @@ int main()
 
     glClearColor(0.0, 0.3f, 0.3f, 1.0f);
 
-    Shader Shader("Resources/shaders/shader.glsl");
+    Shader shader("Resources/shaders/shader.glsl");
 
-    Shader.Bind();
+    shader.Bind();
 
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(windowManager.GetNativeWindow())) {
 
         glClear(GL_COLOR_BUFFER_BIT); //| GL_DEPTH_BUFFER_BIT);
-        processInput(window);
+        processInput(windowManager.GetNativeWindow());
         
 
         vertexArray->Bind();
-        update_uniform(Shader);
+     
+        {
+            glm::mat4 World = glm::mat4(1.0f);
+            World = glm::translate(World, glm::vec3(0.0f, 0.0f, -3.0f));
+            World = glm::rotate(World, 0.03f, glm::vec3(0.0f, 1.0f, 0.0f));
+            World = glm::scale(World, glm::vec3(1.0f, 1.0f, 1.0f));
+
+
+            cameraH.OnUpdate();
+            const glm::mat4 View = cameraH.GetView();
+
+            glm::mat4 FinalTransform = cameraH.GetPerspectiveProjection() * View * World;
+
+            shader.SetMat4("uTranslation", FinalTransform);
+        }
+
+
         glDrawElements(GL_TRIANGLES, Indices.size(), GL_UNSIGNED_INT, nullptr);
 
 
-      
-
-
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(windowManager.GetNativeWindow());
         glfwPollEvents();
     }
 

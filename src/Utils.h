@@ -3,11 +3,12 @@
 #include <numbers>
 #include <random>
 
+
 #define DegtoRad(degrees) ((degrees) * std::numbers::pi / 180.0f)
 #define RadtoDeg(radians) ((radians) * 180.0f / std::numbers::pi)
 
-
-
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 
@@ -76,6 +77,13 @@ public:
 	}
 
 	
+	static mat4 GLMmat4_to_mat4(glm::mat4 matrix)
+	{
+		mat4 res;
+		std::memcpy(&res, glm::value_ptr(matrix), sizeof(glm::mat4));
+		return res;
+ 	}
+
 
 	mat4 operator* (const mat4& other) const
 	{
@@ -202,6 +210,7 @@ public:
 	}
 
 	
+
 	mat4& cameraRotate(const vec3& target, const vec3& up)
 	{
 		vec3 n = (-target).normalized(); // forward, n vector must targeting to positive z axis

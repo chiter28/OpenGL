@@ -52,6 +52,10 @@ add_compile_definitions(
     GLM_FORCE_DEFAULT_ALIGNED_GENTYPES # Выравнивание данных в памяти по 16 байт (для SIMD)
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+	GLM_ENABLE_EXPERIMANTAL
+)
+
 if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE
 		$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/02;/0i;/0t;/fp-fast>

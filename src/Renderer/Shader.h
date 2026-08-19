@@ -14,7 +14,7 @@ public:
 	void Unbind() const;
 
 	void SetFloat(const std::string& name, float value);
-	void SetMat4(const std::string& name, const mat4& matrix);
+	void SetMat4(const std::string& name, const glm::mat4& matrix);
 
 private:
 	std::string ReadFile(const std::string& filePath);

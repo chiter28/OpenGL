@@ -2,7 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <array>
-
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 Shader::Shader(const std::string& filePath)
 {
@@ -171,14 +172,14 @@ void Shader::SetFloat(const std::string& name, float value)
 	glUniform1f(location, value);
 }
 
-void Shader::SetMat4(const std::string& name, const mat4& matrix)
+void Shader::SetMat4(const std::string& name, const glm::mat4& matrix)
 {
 	int location = GetUniformLocation(name.c_str());
 	if (location == -1) {
 		std::cerr << "Error: uniform " << name << " not found" << std::endl;
 		return;
 	}
-	glUniformMatrix4fv(location, 1, GL_FALSE, matrix.value_ptr());
+	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 
