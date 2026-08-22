@@ -133,7 +133,7 @@ uint32_t VertexBufferLayout::GetShaderDataTypeSize(ShaderDataType type)
 	}
 }
 
-GLenum VertexBufferLayout::ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
+uint32_t VertexBufferLayout::ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
 {
 	switch (type)
 	{

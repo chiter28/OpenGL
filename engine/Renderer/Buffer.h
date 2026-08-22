@@ -1,11 +1,8 @@
 #pragma once
 
 #include <string>
-#include <glad/glad.h>
-#include "VertexArray.h"
 #include "../Utils.h"
 #include <vector>
-#include <random>
 #include <span>
 
 enum class VertexElement
@@ -34,7 +31,6 @@ class VertexBufferLayout
 {
 public:
 	friend class VertexArray;
-	friend class VertexBuffer;
 
 	VertexBufferLayout() = default;
 
@@ -51,15 +47,15 @@ public:
 
 private:
 	static uint32_t GetShaderDataTypeSize(ShaderDataType type);
-	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type);
+	static uint32_t ShaderDataTypeToOpenGLBaseType(ShaderDataType type);
 	
 private:
 	struct BufferElement
 	{
 		VertexElement Attribute;
 		ShaderDataType Type = ShaderDataType::None;
-		GLuint Size = 0;
-		GLuint Offset = 0;
+		uint32_t Size = 0;
+		uint32_t Offset = 0;
 		bool Normalized = false;
 
 		uint32_t GetComponentCount() const;
@@ -75,7 +71,6 @@ private:
 class VertexBuffer
 {
 public:
-	friend class VertexArray;
 
 	VertexBuffer(const std::vector<Vertex>& vertices);
 	~VertexBuffer();
@@ -83,6 +78,9 @@ public:
 
 	void Bind() const;
 	void Unbind() const;
+
+	uint32_t GetID() const { return m_VBO; }
+	const VertexBufferLayout& GetLayout() const { return m_Layout; }
 
 private:
 	uint32_t m_VBO;
@@ -96,13 +94,15 @@ private:
 class IndexBuffer
 {
 public:
-	friend class VertexArray;
 
 	IndexBuffer(std::span<uint32_t> indexBuffer);
 	~IndexBuffer();
 
 	void Bind() const;
 	void Unbind() const;
+
+	uint32_t GetID() const { return m_IBO; }
+
 private:
 	uint32_t m_IBO;
 };

@@ -1,5 +1,6 @@
 #include "VertexArray.h"
 #include "../Utils.h"
+#include <glad/glad.h>
 
 
 VertexArray::VertexArray()
@@ -24,9 +25,9 @@ void VertexArray::Unbind() const
 
 void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer)
 {
-	glVertexArrayVertexBuffer(m_VAO, m_VertexBindingIndex, vertexBuffer->m_VBO, 0, sizeof(Vertex));
+	glVertexArrayVertexBuffer(m_VAO, m_VertexBindingIndex, vertexBuffer->GetID(), 0, sizeof(Vertex));
 
-	for (const VertexBufferLayout::BufferElement& element : vertexBuffer->m_Layout.m_BufferElements)
+	for (const VertexBufferLayout::BufferElement& element : vertexBuffer->GetLayout().m_BufferElements)
 	{
 
 		glEnableVertexArrayAttrib(m_VAO, m_AttributeIndex);
@@ -34,7 +35,7 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuf
 			m_VAO,
 			m_AttributeIndex,
 			element.GetComponentCount(),
-			vertexBuffer->m_Layout.ShaderDataTypeToOpenGLBaseType(element.Type),
+			vertexBuffer->GetLayout().ShaderDataTypeToOpenGLBaseType(element.Type),
 			element.Normalized,
 			element.Offset
 		);
@@ -49,6 +50,6 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuf
 
 void VertexArray::AddIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer)
 {
-	glVertexArrayElementBuffer(m_VAO, indexBuffer->m_IBO);
+	glVertexArrayElementBuffer(m_VAO, indexBuffer->GetID());
 	m_IndexBuffer = indexBuffer;
 }

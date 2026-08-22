@@ -4,8 +4,6 @@
 #include <memory>
 #include "Buffer.h"
 
-class VertexBuffer;
-class IndexBuffer;
 
 class VertexArray
 {
@@ -13,8 +11,8 @@ public:
 	VertexArray();
 	~VertexArray();
 
-	virtual void Bind() const;
-	virtual void Unbind() const;
+	void Bind() const;
+	void Unbind() const;
 
 	void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer);
 	void AddIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer);
