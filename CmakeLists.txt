@@ -1,14 +1,14 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
 
 
 # --- Project Settings --- #
+
+
 
 project(OpenGL CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-
 
 
 
@@ -23,56 +23,74 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/glfw)
 
 # GLAD
-add_library(glad STATIC external/glad/src/glad.c)
-target_include_directories(glad PUBLIC external/glad/include)
+add_library(glad STATIC
+	external/glad/src/glad.c
+)
+target_include_directories(glad PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
+)
 
 
+# stb_image
+add_library(stb_image STATIC
+	external/stb/stb_image.h
+	external/stb/stb_image.cpp
+)
+target_include_directories(stb_image PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+)
 
 
 
 # --- Executable --- #
 	
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
-	"src/*.cpp"
-	"src/*.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.c"
 )
 
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
-	"src/*.h"
-	"src/*.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.hpp"
 )
 
-#source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "src" FILES ${SOURCES} ${HEADERS})
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+add_executable(${PROJECT_NAME}
+	${SOURCES}
+	${HEADERS}
+)
 
-add_compile_definitions(
+target_compile_definitions(${PROJECT_NAME} PRIVATE
 	GLM_FORCE_INLINE                   # Принудительный инлайнинг всех математических функций
     GLM_FORCE_INTRINSICS               # Включение SIMD (SSE2/AVX/NEON)
     GLM_FORCE_DEFAULT_ALIGNED_GENTYPES # Выравнивание данных в памяти по 16 байт (для SIMD)
 )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-	GLM_ENABLE_EXPERIMANTAL
-)
-
+# --- Ignore MSVC Static Analysis Warnings for GLM ---
 if(MSVC)
-	target_compile_options(${PROJECT_NAME} PRIVATE
-		$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/02;/0i;/0t;/fp-fast>
-		$<$<CONFIG:Debug>:/0d;/RTC1;/Zi>
-	)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /wd26495 # Принудительно отключает C26495 (uninitialized member variable в union)
+        /external:anglebrackets 
+        /external:W0
+    )
 endif()
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/engine
+)
+
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
 	external/glad/include
 	external/glm
-	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 
+
+	
+
 # Линкуем  glfw и glad (без OpenGL::GL)
-target_link_libraries(OpenGL PRIVATE glfw glad)
+target_link_libraries(OpenGL PRIVATE glfw glad stb_image)
 
 # Copy /Resources dir to dir with .exe file
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
