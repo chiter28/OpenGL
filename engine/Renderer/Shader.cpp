@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
 Shader::Shader(const std::string& filePath)
 {
 	std::string source = ReadFile(filePath);
@@ -32,7 +33,6 @@ static GLenum ShaderTypeFromString(const std::string& type)
 std::string Shader::ReadFile(const std::string& filePath)
 {
 	std::string result;
-
 	std::ifstream in(filePath, std::ios::in | std::ios::binary);
 	if (in) {
 		in.seekg(0, std::ios::end); // translate pointer to the end of file
@@ -180,6 +180,16 @@ void Shader::SetMat4(const std::string& name, const glm::mat4& matrix)
 		return;
 	}
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+void Shader::SetInt(const std::string& name, int value)
+{
+	int location = GetUniformLocation(name.c_str());
+	if (location == -1) {
+		std::cerr << "Error: uniform " << name << " not found" << std::endl;
+		return;
+	}
+	glUniform1i(location, value);
 }
 
 

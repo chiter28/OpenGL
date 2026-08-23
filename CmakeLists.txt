@@ -63,17 +63,9 @@ add_executable(${PROJECT_NAME}
 target_compile_definitions(${PROJECT_NAME} PRIVATE
 	GLM_FORCE_INLINE                   # Принудительный инлайнинг всех математических функций
     GLM_FORCE_INTRINSICS               # Включение SIMD (SSE2/AVX/NEON)
-    GLM_FORCE_DEFAULT_ALIGNED_GENTYPES # Выравнивание данных в памяти по 16 байт (для SIMD)
 )
 
-# --- Ignore MSVC Static Analysis Warnings for GLM ---
-if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE
-        /wd26495 # Принудительно отключает C26495 (uninitialized member variable в union)
-        /external:anglebrackets 
-        /external:W0
-    )
-endif()
+
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -90,11 +82,31 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
 	
 
 # Линкуем  glfw и glad (без OpenGL::GL)
-target_link_libraries(OpenGL PRIVATE glfw glad stb_image)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad stb_image)
 
-# Copy /Resources dir to dir with .exe file
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
+
+
+# --- Ignore MSVC Static Analysis Warnings for GLM ---
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /wd26495 # Принудительно отключает C26495 (uninitialized member variable в union)
+        /external:anglebrackets 
+        /external:W0
+    )
+	set_target_properties(${PROJECT_NAME} PROPERTIES
+		VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+	)
+endif()
+
+file(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/*")
+
+add_custom_target(CopyResources ALL
+	COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources"
+	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 	"${CMAKE_CURRENT_SOURCE_DIR}/Resources"
 	"$<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources"
+	SOURCES ${RESOURCE_FILES}
+	COMMENT "Copying modified resources..."
 )
+
+add_dependencies(${PROJECT_NAME} CopyResources)

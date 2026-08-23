@@ -9,6 +9,7 @@ class VertexArray
 {
 public:
 	VertexArray();
+	VertexArray(const std::shared_ptr<VertexBuffer>& vertexBuffer, const std::shared_ptr<IndexBuffer>& indexBuffer);
 	~VertexArray();
 
 	void Bind() const;
@@ -18,9 +19,9 @@ public:
 	void AddIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer);
 
 private:
-	uint32_t m_VertexBindingIndex = 0;
 	uint32_t m_VAO;
 	std::vector<std::shared_ptr<VertexBuffer>> m_VertexBuffers;
 	std::shared_ptr<IndexBuffer> m_IndexBuffer;
 	uint32_t m_AttributeIndex = 0;
+	uint32_t m_VertexBindingIndex = 0;
 };

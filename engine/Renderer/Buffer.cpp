@@ -13,7 +13,7 @@ VertexBuffer::~VertexBuffer()
 	glDeleteBuffers(1, &m_VBO);
 }
 
-void VertexBuffer::SetLayout(const std::initializer_list<VertexElement>& vertexElements)
+void VertexBuffer::SetLayout(const std::initializer_list<VertexAttribute>& vertexElements)
 {
 	VertexBufferLayout layout(vertexElements);
 	m_Layout = layout;
@@ -58,7 +58,7 @@ void IndexBuffer::Unbind() const
 
 
 
-VertexBufferLayout::VertexBufferLayout(const std::initializer_list<VertexElement>& vertexElements)
+VertexBufferLayout::VertexBufferLayout(const std::initializer_list<VertexAttribute>& vertexElements)
 {
 	for (auto& element : vertexElements) {
 
@@ -66,9 +66,9 @@ VertexBufferLayout::VertexBufferLayout(const std::initializer_list<VertexElement
 
 		switch (element)
 		{
-			case VertexElement::Position:
+			case VertexAttribute::Position:
 			{
-				bufferElement.Attribute = VertexElement::Position;
+				bufferElement.Attribute = VertexAttribute::Position;
 				bufferElement.Type = ShaderDataType::Float3;
 				bufferElement.Size = GetShaderDataTypeSize(ShaderDataType::Float3);
 				bufferElement.Offset = m_Stride;
@@ -77,11 +77,22 @@ VertexBufferLayout::VertexBufferLayout(const std::initializer_list<VertexElement
 				break;
 			}
 
-			case VertexElement::Color:
+			case VertexAttribute::Color:
 			{
-				bufferElement.Attribute = VertexElement::Color;
+				bufferElement.Attribute = VertexAttribute::Color;
 				bufferElement.Type = ShaderDataType::Float3;
 				bufferElement.Size = GetShaderDataTypeSize(ShaderDataType::Float3);
+				bufferElement.Offset = m_Stride;
+				m_Stride += bufferElement.Size;
+				bufferElement.Normalized = false;
+				break;
+			}
+
+			case VertexAttribute::TexCoord:
+			{
+				bufferElement.Attribute = VertexAttribute::TexCoord;
+				bufferElement.Type = ShaderDataType::Float2;
+				bufferElement.Size = GetShaderDataTypeSize(ShaderDataType::Float2);
 				bufferElement.Offset = m_Stride;
 				m_Stride += bufferElement.Size;
 				bufferElement.Normalized = false;

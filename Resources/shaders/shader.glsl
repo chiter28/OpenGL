@@ -3,15 +3,15 @@
 
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec3 aColor;
+layout (location = 2) in vec2 aTexCoord;
 
-out vec3 Color;
-
-uniform mat4 uTranslation;
+uniform mat4 uMVP;
+out vec2 TexCoord;
 
 void main()
 {
-	gl_Position = uTranslation * vec4(aPosition, 1.0);
-	Color = aColor;
+	gl_Position = uMVP * vec4(aPosition, 1.0);
+	TexCoord = aTexCoord;
 }
 
 
@@ -19,10 +19,13 @@ void main()
 #type fragment
 #version 450 core
 
-in vec3 Color;
+in vec2 TexCoord;
 layout (location = 0) out vec4 outColor;
 
+uniform sampler2D uSampler;
+ 
 void main()
 {
-	outColor = vec4(Color, 1.0);
+	vec4 tex = texture(uSampler, TexCoord);
+	outColor = tex;	
 }

@@ -5,23 +5,27 @@
 #include <vector>
 #include <span>
 
-enum class VertexElement
+enum class VertexAttribute
 {
 	None = 0,
 	Position,
-	Color
+	Color,
+	TexCoord
 };
 
 
-struct alignas(4) Vertex
+struct Vertex
 {
-	vec3 position;
-	vec3 color;
+	glm::vec3 Position;
+	glm::vec3 Color;
+	glm::vec2 TexCoord;
 
 	Vertex() = default;
 
-	Vertex(float xPos, float yPos, float zPos, float R, float G, float B)
-		: position(xPos, yPos, zPos), color(R, G, B)
+	Vertex(float xPos, float yPos, float zPos,
+		   float R, float G, float B,
+		   float u, float v)
+		: Position(xPos, yPos, zPos), Color(R, G, B), TexCoord(u, v)
 	{}
 };
 
@@ -30,10 +34,6 @@ struct alignas(4) Vertex
 class VertexBufferLayout
 {
 public:
-	friend class VertexArray;
-
-	VertexBufferLayout() = default;
-
 	enum class ShaderDataType
 	{
 		None = 0,
@@ -43,16 +43,9 @@ public:
 		Bool
 	};
 
-	VertexBufferLayout(const std::initializer_list<VertexElement>& vertexElements);
-
-private:
-	static uint32_t GetShaderDataTypeSize(ShaderDataType type);
-	static uint32_t ShaderDataTypeToOpenGLBaseType(ShaderDataType type);
-	
-private:
 	struct BufferElement
 	{
-		VertexElement Attribute;
+		VertexAttribute Attribute;
 		ShaderDataType Type = ShaderDataType::None;
 		uint32_t Size = 0;
 		uint32_t Offset = 0;
@@ -61,6 +54,18 @@ private:
 		uint32_t GetComponentCount() const;
 	};
 
+	uint32_t GetStride() const { return m_Stride; }
+
+public:
+	VertexBufferLayout() = default;
+	VertexBufferLayout(const std::initializer_list<VertexAttribute>& vertexElements);
+
+	const std::vector<BufferElement>& GetElements() const { return m_BufferElements; }
+
+	static uint32_t ShaderDataTypeToOpenGLBaseType(ShaderDataType type);
+	static uint32_t GetShaderDataTypeSize(ShaderDataType type);
+
+private:
 	std::vector<BufferElement> m_BufferElements;
 	uint32_t m_Stride = 0;
 };
@@ -74,7 +79,7 @@ public:
 
 	VertexBuffer(const std::vector<Vertex>& vertices);
 	~VertexBuffer();
-	void SetLayout(const std::initializer_list<VertexElement>& bufferElements);
+	void SetLayout(const std::initializer_list<VertexAttribute>& bufferElements);
 
 	void Bind() const;
 	void Unbind() const;

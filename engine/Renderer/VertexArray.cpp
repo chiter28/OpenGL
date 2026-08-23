@@ -8,6 +8,13 @@ VertexArray::VertexArray()
 	glCreateVertexArrays(1, &m_VAO);
 }
 
+VertexArray::VertexArray(const std::shared_ptr<VertexBuffer>& vertexBuffer, const std::shared_ptr<IndexBuffer>& indexBuffer)
+{
+	glCreateVertexArrays(1, &m_VAO);
+	AddVertexBuffer(vertexBuffer);
+	AddIndexBuffer(indexBuffer);
+}
+
 VertexArray::~VertexArray()
 {
 	glDeleteVertexArrays(1, &m_VAO);
@@ -27,7 +34,7 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuf
 {
 	glVertexArrayVertexBuffer(m_VAO, m_VertexBindingIndex, vertexBuffer->GetID(), 0, sizeof(Vertex));
 
-	for (const VertexBufferLayout::BufferElement& element : vertexBuffer->GetLayout().m_BufferElements)
+	for (const VertexBufferLayout::BufferElement& element : vertexBuffer->GetLayout().GetElements())
 	{
 
 		glEnableVertexArrayAttrib(m_VAO, m_AttributeIndex);
@@ -35,7 +42,7 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuf
 			m_VAO,
 			m_AttributeIndex,
 			element.GetComponentCount(),
-			vertexBuffer->GetLayout().ShaderDataTypeToOpenGLBaseType(element.Type),
+			VertexBufferLayout::ShaderDataTypeToOpenGLBaseType(element.Type),
 			element.Normalized,
 			element.Offset
 		);
