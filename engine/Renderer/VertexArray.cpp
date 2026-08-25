@@ -25,14 +25,13 @@ void VertexArray::Bind() const
 	glBindVertexArray(m_VAO);
 }
 
-void VertexArray::Unbind() const
-{
-	glBindVertexArray(0);
-}
 
-void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer)
+void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t divisor)
 {
-	glVertexArrayVertexBuffer(m_VAO, m_VertexBindingIndex, vertexBuffer->GetID(), 0, sizeof(Vertex));
+	glVertexArrayVertexBuffer(m_VAO, m_VertexBindingIndex, vertexBuffer->GetID(), 0, vertexBuffer->GetLayout().GetStride());
+
+	if (divisor > 0)
+		glVertexArrayBindingDivisor(m_VAO, m_VertexBindingIndex, divisor);
 
 	for (const VertexBufferLayout::BufferElement& element : vertexBuffer->GetLayout().GetElements())
 	{

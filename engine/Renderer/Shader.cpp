@@ -13,6 +13,11 @@ Shader::Shader(const std::string& filePath)
 	Compile(shaders);
 }
 
+Shader::~Shader()
+{
+	glDeleteProgram(m_Program);
+}
+
 static GLenum ShaderTypeFromString(const std::string& type)
 {
 	if (type == "vertex") {

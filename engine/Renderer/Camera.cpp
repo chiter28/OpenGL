@@ -118,13 +118,13 @@ void Camera::MouseRotate(const glm::vec2& delta)
 
 void Camera::MousePan(const glm::vec2& delta)
 {
-	float panSpeed = 0.01f;
+	float panSpeed = 0.001f * m_Distance;
 	m_FocalPoint += -GetRight() * delta.x * panSpeed;
 	m_FocalPoint += GetUp() * delta.y * panSpeed;
 }
 
 void Camera::MouseZoom(float delta)
 {
-	float zoomSpeed = 0.01;
+	float zoomSpeed = 0.001f * m_Distance;
 	m_Distance -= delta * zoomSpeed;
 }

@@ -13,9 +13,8 @@ public:
 	~VertexArray();
 
 	void Bind() const;
-	void Unbind() const;
 
-	void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer);
+	void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t divisor = 0);
 	void AddIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer);
 
 private:

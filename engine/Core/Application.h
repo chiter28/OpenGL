@@ -18,7 +18,7 @@ private:
 
 	void OnEvent(Event& event);
 
-	inline static App* s_Instance;
+	inline static App* s_Instance = nullptr;
 
 	EventQueue m_EventQueue;
 	std::unique_ptr<Window> m_Window;

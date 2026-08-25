@@ -1,11 +1,14 @@
 #include "Buffer.h"
 #include <glad/glad.h>
 
+
+
 // VertexBuffer
-VertexBuffer::VertexBuffer(const std::vector<Vertex>& vertices)
+VertexBuffer::VertexBuffer(const void* data, uint32_t size, const VertexBufferLayout& layout)
+	: m_Layout(layout)
 {
 	glCreateBuffers(1, &m_VBO);
-	glNamedBufferStorage(m_VBO, vertices.size() * sizeof(Vertex), vertices.data(), 0);
+	glNamedBufferStorage(m_VBO, size, data, 0);
 }
 
 VertexBuffer::~VertexBuffer()
@@ -18,16 +21,7 @@ void VertexBuffer::SetLayout(const std::initializer_list<VertexAttribute>& verte
 	VertexBufferLayout layout(vertexElements);
 	m_Layout = layout;
 }
-
-void VertexBuffer::Bind() const
-{
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-}
-
-void VertexBuffer::Unbind() const
-{
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
+	
 
 
 
@@ -44,15 +38,6 @@ IndexBuffer::~IndexBuffer()
 	glDeleteBuffers(1, &m_IBO);
 }
 
-void IndexBuffer::Bind() const
-{
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
-}
-
-void IndexBuffer::Unbind() const
-{
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
 
 
 
@@ -101,7 +86,6 @@ VertexBufferLayout::VertexBufferLayout(const std::initializer_list<VertexAttribu
 		}
 		m_BufferElements.emplace_back(bufferElement);
 	}
-
 }
 
 uint32_t VertexBufferLayout::BufferElement::GetComponentCount() const

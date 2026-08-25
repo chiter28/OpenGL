@@ -4,6 +4,7 @@
 #include "Renderer/Shader.h"
 #include "Renderer/Texture.h"
 
+
 #include "Events/EventDispatcher.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
@@ -15,6 +16,8 @@
 
 #include <iostream>
 #include <array>
+#include <vector>
+
 
 App::App()
 { 
@@ -23,75 +26,62 @@ App::App()
 	m_Camera = std::make_unique<Camera>();
 }
 
+
+
+
 void App::Run()
 {
-	int textureUnits;
-	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &textureUnits);
-	std::cout << textureUnits << std::endl;
-
-	glEnable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
 
 	// OpenGL
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
+	
 
 
-	std::vector<Vertex> vertices = {
-		// Позиция (X, Y, Z)            Цвет (R, G, B)      UV (U, V)
+	using VertexFull = Vertex<Position, Color, TexCoord>; // Pos -> Color -> UV
+	
+	
+	std::vector<Vertex<Position, Color, TexCoord>> cube
+	{
+		{ Position{{-0.5f, -0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 0.0f}} },
+		{ Position{{ 0.5f, -0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 0.0f}} },
+		{ Position{{ 0.5f,  0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 1.0f}} },
+		{ Position{{-0.5f,  0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 1.0f}} },
 
-		// === Передняя грань (+Z) ===
-		Vertex(-0.5f, -0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 0.0f), // 0: Низ-Лево
-		Vertex(0.5f, -0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 0.0f), // 1: Низ-Право
-		Vertex(0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 1.0f), // 2: Верх-Право
-		Vertex(-0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f), // 3: Верх-Лево
-
-		// === Задняя грань (-Z) ===
-		Vertex(0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 0.0f), // 4
-		Vertex(-0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 0.0f), // 5
-		Vertex(-0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 1.0f), // 6
-		Vertex(0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f), // 7
-
-		// === Правая грань (+X) ===
-		Vertex(0.5f, -0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 0.0f), // 8
-		Vertex(0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 0.0f), // 9
-		Vertex(0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 1.0f), // 10
-		Vertex(0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f), // 11
-
-		// === Левая грань (-X) ===
-		Vertex(-0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 0.0f), // 12
-		Vertex(-0.5f, -0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 0.0f), // 13
-		Vertex(-0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 1.0f), // 14
-		Vertex(-0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f), // 15
-
-		// === Верхняя грань (+Y) ===
-		Vertex(-0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 0.0f), // 16
-		Vertex(0.5f,  0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 0.0f), // 17
-		Vertex(0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 1.0f), // 18
-		Vertex(-0.5f,  0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f), // 19
-
-		// === Нижняя грань (-Y) ===
-		Vertex(-0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 0.0f), // 20
-		Vertex(0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 0.0f), // 21
-		Vertex(0.5f, -0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   1.0f, 1.0f), // 22
-		Vertex(-0.5f, -0.5f,  0.5f,    1.0f, 1.0f, 1.0f,   0.0f, 1.0f)  // 23
+		{ Position{{ 0.5f, -0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 0.0f}} },
+		{ Position{{-0.5f, -0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 0.0f}} },
+		{ Position{{-0.5f,  0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 1.0f}} },
+		{ Position{{ 0.5f,  0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 1.0f}} },
+		
+		{ Position{{ 0.5f, -0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 0.0f}} },
+		{ Position{{ 0.5f, -0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 0.0f}} },
+		{ Position{{ 0.5f,  0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 1.0f}} },
+		{ Position{{ 0.5f,  0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 1.0f}} },
+		
+		{ Position{{-0.5f, -0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 0.0f}} },
+		{ Position{{-0.5f, -0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 0.0f}} },
+		{ Position{{-0.5f,  0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 1.0f}} },
+		{ Position{{-0.5f,  0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 1.0f}} },
+		
+		{ Position{{-0.5f,  0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 0.0f}} },
+		{ Position{{ 0.5f,  0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 0.0f}} },
+		{ Position{{ 0.5f,  0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 1.0f}} },
+		{ Position{{-0.5f,  0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 1.0f}} },
+		
+		{ Position{{-0.5f, -0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 0.0f}} },
+		{ Position{{ 0.5f, -0.5f, -0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 0.0f}} },
+		{ Position{{ 0.5f, -0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{1.0f, 1.0f}} },
+		{ Position{{-0.5f, -0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 1.0f}} }
 	};
 
+	std::shared_ptr<VertexBuffer> vertexBuffer = VertexBuffer::Create(cube);
 
-
-
-
-	// Vertex Buffer
-	std::shared_ptr<VertexBuffer> vertexBuffer = std::make_shared<VertexBuffer>(vertices);
-	vertexBuffer->SetLayout({
-			VertexAttribute::Position,
-			VertexAttribute::Color,
-			VertexAttribute::TexCoord
-		});
-
+	
 
 	// Index Buffer
-	std::array<uint32_t, 36> Indices = {
+	std::array<uint32_t, 36> IndicesCube = {
 		// Передняя
 		0, 1, 2,   2, 3, 0,
 		// Задняя
@@ -105,20 +95,40 @@ void App::Run()
 		// Нижняя
 		20, 21, 22, 22, 23, 20
 	};
-	std::shared_ptr<IndexBuffer> indexBuffer = std::make_shared<IndexBuffer>(Indices);
+	std::shared_ptr<IndexBuffer> indexBuffer = std::make_shared<IndexBuffer>(IndicesCube);
 
-	// Vertex Array
+	// Vertex Array Cube
 	std::shared_ptr<VertexArray> vertexArray = std::make_shared<VertexArray>(vertexBuffer, indexBuffer);
 
+	
+	
+	
+	
 
-	Texture texture("Resources/textures/image.JPEG");
+	std::vector<Vertex<Instance>> instanceOffset(1000);
+	for (int i = 0; i < 1000; i++) {
+		instanceOffset[i].value = glm::vec3(rand() % 50, rand() % 50, rand() % 50);
+	}
+
+	auto instanceVB = VertexBuffer::Create(instanceOffset);
+	instanceVB->SetLayout({ VertexAttribute::Position });
+	// 3. Собираем всё в VertexArray
+	auto va = std::make_shared<VertexArray>();
+
+	// Обычный буфер геометрии (divisor = 0 по умолчанию)
+	va->AddVertexBuffer(vertexBuffer);
+	va->AddVertexBuffer(instanceVB, 1);
+	va->AddIndexBuffer(indexBuffer);
 
 
 
-
+	Texture texture("Resources/textures/guc.png");
 	Shader shader("Resources/shaders/shader.glsl");
-	shader.Bind();
 
+
+	shader.Bind();
+	texture.Bind(0);
+	shader.SetInt("uSampler", 0);
 
 	while (m_Running && !m_Window->ShouldClose())
 	{
@@ -137,27 +147,36 @@ void App::Run()
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
+
+		
+			GLint currentVAO;
+			glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &currentVAO);
+
+
+
+
+
 			vertexArray->Bind();
+			for (int i = 0; i < 20; i++) {
+				{
+					glm::mat4 World = glm::mat4(1.0f);
+					World = glm::translate(World, glm::vec3(i +0.5f, 0.0f, 0.0f));
+					World = glm::rotate(World, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+					World = glm::scale(World, glm::vec3(1.0f, 1.0f, 1.0f));
 
-			{
-				glm::mat4 World = glm::mat4(1.0f);
-				World = glm::translate(World, glm::vec3(0.0f, 0.0f, 0.0f));
-				World = glm::rotate(World, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-				World = glm::scale(World, glm::vec3(1.0f, 1.0f, 1.0f));
 
+					m_Camera->OnUpdate();
+					const glm::mat4 View = m_Camera->GetView();
 
-				m_Camera->OnUpdate();
-				const glm::mat4 View = m_Camera->GetView();
+					glm::mat4 FinalTransform = m_Camera->GetPerspectiveProjection() * View * World;
 
-				glm::mat4 FinalTransform = m_Camera->GetPerspectiveProjection() * View * World;
-
-				shader.SetMat4("uMVP", FinalTransform);
+					shader.SetMat4("uMVP", FinalTransform);
+				}
+				glDrawElements(GL_TRIANGLES, IndicesCube.size(), GL_UNSIGNED_INT, nullptr);
 			}
-
-			texture.Bind(0);
-			shader.SetInt("uSampler", 0);
-
-			glDrawElements(GL_TRIANGLES, Indices.size(), GL_UNSIGNED_INT, nullptr);
+			
+			va->Bind();
+			glDrawElementsInstanced(GL_TRIANGLES, IndicesCube.size(), GL_UNSIGNED_INT, nullptr, 1000);
 
 
 
