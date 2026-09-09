@@ -10,18 +10,7 @@ public:
 		: m_Event(event)
 	{}
 
-	/*template<typename Type, typename Func>
-	bool Dispatch(const Func& func)
-	{
-
-		if (m_Event.GetEventType() == Type::GetStaticType()) {
-			m_Event.m_Handled |= func(static_cast<Type&>(m_Event));
-			return true;
-		}
-		return false;
-
-	}*/
-
+	
 
 	template<typename T, typename Func>
 	bool Dispatch(Func&& func)

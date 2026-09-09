@@ -1,112 +1,148 @@
 cmake_minimum_required(VERSION 3.24)
 
-
-# --- Project Settings --- #
-
-
-
+# --- Настройки проекта --- #
+# Объявляем имя проекта "OpenGL" и используемые языки (C++ и C)
 project(OpenGL CXX C)
 
+# Генерировать файл compile_commands.json (полезно для автодополнения в IDE / clangd)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Устанавливаем стандарт C++20 и делаем его обязательным
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# --- Внешние библиотеки (External) --- #
 
-
-
-# --- External Libraries --- #
-
-# GLFW
+# Отключаем сборку лишних компонентов GLFW (тесты, примеры, документация), чтобы ускорить сборку
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+# Подключаем GLFW из внутренней поддиректории
 add_subdirectory(external/glfw)
 
-# GLAD
+# Объявляем статическую библиотеку для GLAD (загрузчик функций OpenGL)
 add_library(glad STATIC
 	external/glad/src/glad.c
 )
+# Делаем заголовочные файлы GLAD публично доступными для всех, кто линкует glad
 target_include_directories(glad PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
 )
 
-
-# stb_image
+# Объявляем статическую библиотеку для stb_image (загрузка текстур)
 add_library(stb_image STATIC
 	external/stb/stb_image.h
 	external/stb/stb_image.cpp
 )
+# Открываем доступ к заголовочным файлам stb
 target_include_directories(stb_image PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/external/stb
 )
 
+# Настройка и отключение неиспользуемых частей библиотеки Assimp (загрузка 3D-моделей)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL_PDB OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
 
+# Включаем импорт только нужных 3D-форматов (.obj, .gltf/.glb, .fbx)
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
+# Подключаем Assimp из исходников
+add_subdirectory(external/assimp)
 
-# --- Executable --- #
-	
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+# =========================================================================
+# --- Target Движка Engine (Статическая библиотека .lib / .a) ---
+# =========================================================================
+
+# Рекурсивно собираем все файлы реализаций (.cpp, .c) внутри папки engine
+# CONFIGURE_DEPENDS заставляет CMake пересобирать проект при добавлении новых файлов
+file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
 	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.c"
 )
 
-file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
+# Рекурсивно собираем все заголовочные файлы (.h, .hpp) внутри папки engine
+file(GLOB_RECURSE ENGINE_HEADERS CONFIGURE_DEPENDS
 	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.hpp"
 )
 
-
-add_executable(${PROJECT_NAME}
-	${SOURCES}
-	${HEADERS}
+# Создаем статическую библиотеку движка под именем "engine"
+add_library(engine STATIC
+	${ENGINE_SOURCES}
+	${ENGINE_HEADERS}
 )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-	GLM_FORCE_INLINE                   # Принудительный инлайнинг всех математических функций
-    GLM_FORCE_INTRINSICS               # Включение SIMD (SSE2/AVX/NEON)
-)
-
-
-
-
-target_include_directories(${PROJECT_NAME} PRIVATE
+# Пробрасываем путь к исходникам engine PUBLIC-ом,
+# чтобы все проекты (например, sandbox) могли делать #include "Core/Application.h"
+target_include_directories(engine PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/engine
 )
 
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
-	external/glad/include
-	external/glm
+# Подключаем системные зависимости (GLAD и GLM) для движка без выдачи предупреждений компилятора (SYSTEM)
+target_include_directories(engine SYSTEM PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
+	${CMAKE_CURRENT_SOURCE_DIR}/external/glm
 )
 
-
-
-	
-
-# Линкуем  glfw и glad (без OpenGL::GL)
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad stb_image)
+# Связываем движок с внешними библиотеками
+target_link_libraries(engine PUBLIC glfw glad stb_image assimp)
 
 
 
-# --- Ignore MSVC Static Analysis Warnings for GLM ---
+
+# =========================================================================
+# --- Target Исполняемого Файла Sandbox (.exe) ---
+# =========================================================================
+
+# Собираем все файлы исходного кода приложения из папки sandbox
+file(GLOB_RECURSE SANDBOX_SOURCES CONFIGURE_DEPENDS
+	"${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.hpp"
+)
+
+# Создаем исполняемый файл sandbox.exe
+add_executable(sandbox
+	${SANDBOX_SOURCES}
+)
+
+# Линкуем наш движок к исполняемому файлу (все PUBLIC зависимости engine подтянутся автоматически)
+target_link_libraries(sandbox PRIVATE engine)
+
+# --- Настройки компилятора MSVC (Visual Studio) --- #
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE
-        /wd26495 # Принудительно отключает C26495 (uninitialized member variable в union)
-        /external:anglebrackets 
+    target_compile_options(engine PRIVATE
+        /wd26495                # Отключаем предупреждение об неинициализированных членах структуры
+        /external:anglebrackets # Игнорируем предупреждения во внешних библиотеках (<...>)
         /external:W0
     )
-	set_target_properties(${PROJECT_NAME} PROPERTIES
-		VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+	# Устанавливаем рабочую директорию отладчика Visual Studio в папку с итоговым exe-файлом
+	set_target_properties(sandbox PROPERTIES
+		VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:sandbox>"
 	)
+	# Включаем многопоточную сборку в MSVC (/MP)
+	add_compile_options(/MP)
 endif()
 
+# --- Копирование ресурсов --- #
+
+# Получаем список всех файлов ресурсов из папки Resources
 file(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/*")
 
+# Создаем кастомный таргет, который копирует ресурсы в папку с собранным .exe файлом
 add_custom_target(CopyResources ALL
-	COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources"
+	COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:sandbox>/Resources"
 	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 	"${CMAKE_CURRENT_SOURCE_DIR}/Resources"
-	"$<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources"
+	"$<TARGET_FILE_DIR:sandbox>/Resources"
 	SOURCES ${RESOURCE_FILES}
-	COMMENT "Copying modified resources..."
+	COMMENT "Copying modified resources to sandbox..."
 )
 
-add_dependencies(${PROJECT_NAME} CopyResources)
+# Заставляем sandbox ждатъ выполнения копирования ресурсов перед/после сборки
+add_dependencies(sandbox CopyResources)

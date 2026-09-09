@@ -2,6 +2,17 @@
 #include "../Utils.h"
 #include <glad/glad.h>
 
+static uint32_t GetAttributeLocation(VertexAttribute attrib)
+{
+	switch (attrib)
+	{
+		case VertexAttribute::Position:	  return 0;
+		case VertexAttribute::Color:	  return 1;
+		case VertexAttribute::TexCoord:	  return 2;
+		case VertexAttribute::Instance:	  return 3;
+	}
+}
+
 
 VertexArray::VertexArray()
 {
@@ -25,6 +36,35 @@ void VertexArray::Bind() const
 	glBindVertexArray(m_VAO);
 }
 
+void VertexArray::AddMultiVertexBuffer(BufferType type, const std::shared_ptr<MultiVertexBuffer>& multiVertexBuffer)
+{
+	glVertexArrayVertexBuffer(m_VAO, m_VertexBindingIndex, multiVertexBuffer->GetID(type), 0, multiVertexBuffer->GetLayout(type).GetStride());
+
+	for (const VertexBufferLayout::BufferElement& element : multiVertexBuffer->GetLayout(type).GetElements())
+	{
+		uint32_t attributeLocation = GetAttributeLocation(element.Attribute);
+
+		glEnableVertexArrayAttrib(m_VAO, attributeLocation);
+		glVertexArrayAttribFormat(
+			m_VAO,
+			attributeLocation,
+			element.GetComponentCount(),
+			VertexBufferLayout::ShaderDataTypeToOpenGLBaseType(element.Type),
+			element.Normalized,
+			element.Offset
+		);
+
+		glVertexArrayAttribBinding(m_VAO, attributeLocation, m_VertexBindingIndex);
+	}
+
+	if (m_MultiVertexBuffer != multiVertexBuffer)
+	{
+		m_MultiVertexBuffer = multiVertexBuffer;
+	}
+
+	m_VertexBindingIndex++;
+}
+
 
 void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t divisor)
 {
@@ -35,18 +75,19 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuf
 
 	for (const VertexBufferLayout::BufferElement& element : vertexBuffer->GetLayout().GetElements())
 	{
+		uint32_t attributeLocation = GetAttributeLocation(element.Attribute);
 
-		glEnableVertexArrayAttrib(m_VAO, m_AttributeIndex);
+		glEnableVertexArrayAttrib(m_VAO, attributeLocation);
 		glVertexArrayAttribFormat(
 			m_VAO,
-			m_AttributeIndex,
+			attributeLocation,
 			element.GetComponentCount(),
 			VertexBufferLayout::ShaderDataTypeToOpenGLBaseType(element.Type),
 			element.Normalized,
 			element.Offset
 		);
 
-		glVertexArrayAttribBinding(m_VAO, m_AttributeIndex++, m_VertexBindingIndex);
+		glVertexArrayAttribBinding(m_VAO, attributeLocation, m_VertexBindingIndex);
 	}
 
 	m_VertexBuffers.emplace_back(vertexBuffer);

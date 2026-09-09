@@ -19,16 +19,36 @@ void main()
 
 
 
+
+
 #type fragment
 #version 450 core
 
 in vec2 TexCoord;
+
 layout (location = 0) out vec4 outColor;
 
+struct BaseLight
+{
+	vec3 Color;
+	float AmbientIntensity;
+};
+
+struct Material
+{
+	vec3 AmbientColor;
+};
+
 uniform sampler2D uSampler;
+uniform BaseLight uLight;
+uniform Material uMaterial;
  
 void main()
 {
-	vec4 tex = texture(uSampler, TexCoord);
+	vec4 tex = texture(uSampler, TexCoord) *
+			   vec4(uMaterial.AmbientColor, 1.0) *
+			   vec4(uLight.Color, 1.0) *
+			   uLight.AmbientIntensity;
+
 	outColor = tex;	
 }
