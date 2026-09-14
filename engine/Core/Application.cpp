@@ -32,6 +32,7 @@ void App::Run()
 	//glCullFace(GL_BACK);
 	
 
+
 	while (m_Running && !m_Window->ShouldClose())
 	{
 		m_Window->PollEvents();

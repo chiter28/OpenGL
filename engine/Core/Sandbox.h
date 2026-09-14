@@ -17,4 +17,6 @@ public:
 	virtual void OnRender(Camera& camera) {}
 
 	virtual void OnEvent(Event& event) {}
+
+	virtual void SetLightDirection() {};
 };

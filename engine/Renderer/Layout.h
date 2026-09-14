@@ -12,16 +12,18 @@ enum class VertexAttribute
 	Position,
 	Color,
 	TexCoord,
+	Normal,
 	Instance
 };
 
 
 
 // Vertex Types
-struct Position { glm::vec3 value; };
-struct Color	{ glm::vec3 value; };
-struct TexCoord { glm::vec2 value; };
-struct Instance { glm::vec3 value; };
+struct Position { glm::vec3 position; };
+struct Color	{ glm::vec3 color; };
+struct TexCoord { glm::vec2 texCoord; };
+struct Normal   { glm::vec3 normal; };
+struct Instance { glm::vec3 instance; };
 
 
 
@@ -109,6 +111,11 @@ template<> struct ComponentTraits<Instance>
 	static constexpr VertexBufferLayout::ShaderDataType Type = VertexBufferLayout::ShaderDataType::Float3;
 };
 
+template<> struct ComponentTraits<Normal>
+{
+	static constexpr VertexAttribute Attribute = VertexAttribute::Normal;
+	static constexpr VertexBufferLayout::ShaderDataType Type = VertexBufferLayout::ShaderDataType::Float3;
+};
 
 
 template<typename T>

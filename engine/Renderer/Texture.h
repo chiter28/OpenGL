@@ -9,7 +9,7 @@ class Texture
 public:
 	Texture(const std::string& path);
 	Texture(const uint8_t* buffer, uint32_t length);
-	Texture(const uint8_t* data, uint32_t width, uint32_t height);
+	Texture(const void* data, uint32_t width, uint32_t height);
 
 	~Texture();
 

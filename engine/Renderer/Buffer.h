@@ -44,6 +44,8 @@ class VertexBuffer
 {
 public:
 
+	VertexBuffer(const void* data, uint32_t size);
+
 	template<typename T>
 	static std::shared_ptr<VertexBuffer> Create(const std::vector<T>& data)
 	{
@@ -52,15 +54,18 @@ public:
 
 	template<typename T>
 	VertexBuffer(const std::vector<T>& data)
-		: VertexBuffer(data.data(), static_cast<uint32_t>(data.size() * sizeof(T)), BufferLayoutTraits<T>::Get()) {}
+		: VertexBuffer(data.data(), static_cast<uint32_t>(data.size() * sizeof(T)), BufferLayoutTraits<T>::Get())
+	{}
 
 	VertexBuffer(const void* data, uint32_t size, const VertexBufferLayout& layout = {});
 
+
 	~VertexBuffer();
+
+
 
 	void SetLayout(const std::initializer_list<VertexAttribute>& vertexAttributes);
 	void SetLayout(const VertexBufferLayout& layout) { m_Layout = layout; }
-
 
 	uint32_t GetID() const { return m_VBO; }
 	const VertexBufferLayout& GetLayout() const { return m_Layout; }

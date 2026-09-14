@@ -51,6 +51,16 @@ VertexBufferLayout::VertexBufferLayout(const std::initializer_list<VertexAttribu
 				bufferElement.Normalized = false;
 				break;
 			}
+			case VertexAttribute::Normal:
+			{
+				bufferElement.Attribute = VertexAttribute::Normal;
+				bufferElement.Type = ShaderDataType::Float3;
+				bufferElement.Size = GetShaderDataTypeSize(ShaderDataType::Float3);
+				bufferElement.Offset = m_Stride;
+				m_Stride += bufferElement.Size;
+				bufferElement.Normalized = false;
+				break;
+			}
 		}
 		m_BufferElements.emplace_back(bufferElement);
 	}

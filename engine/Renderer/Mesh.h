@@ -24,15 +24,12 @@ public:
 		uint32_t MaterialIndex = 0xFFFFFFFF;
 	};
 
-
-
 public:
 	Mesh() = default;
 	~Mesh();
 
 	bool LoadMesh(const std::string& fileName, const std::shared_ptr<Shader>& shader);
 	void Render();
-
 
 private:
 	bool InitFromScene(const aiScene* scene, const std::string& fileName);
@@ -41,15 +38,12 @@ private:
 	void InitMaterials(const aiScene* scene, const std::string& fileName, const std::shared_ptr<Shader>& defaultShader);
 	bool IsMaterialTransparent(const aiMaterial* material);
 	void PopulateBuffers();
-private:
-	std::shared_ptr<VertexArray> m_VertexArray;
-	std::vector<SubMeshElement> m_SubMeshes;
 
+private:
+	std::vector<SubMeshElement> m_SubMeshes;
 	std::vector<std::shared_ptr<Material>> m_Materials;
 
-
-	std::vector<glm::vec3> m_Positions;
-	std::vector<glm::vec2> m_TexCoords;
+	std::shared_ptr<VertexArray> m_VertexArray;
+	std::vector<Vertex<Position, TexCoord, Normal>> m_Vertices;
 	std::vector<uint32_t> m_Indices;
-
 };

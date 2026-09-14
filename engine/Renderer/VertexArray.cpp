@@ -10,6 +10,7 @@ static uint32_t GetAttributeLocation(VertexAttribute attrib)
 		case VertexAttribute::Color:	  return 1;
 		case VertexAttribute::TexCoord:	  return 2;
 		case VertexAttribute::Instance:	  return 3;
+		case VertexAttribute::Normal:	  return 4;
 	}
 }
 

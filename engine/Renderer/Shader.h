@@ -29,7 +29,7 @@ private:
 	int GetUniformLocation(const std::string& name) const;
 
 private:
-	GLuint m_Program;
+	GLuint m_Program = 0;
 	mutable std::unordered_map<std::string, int> m_UniformLocationCache;
 
 };

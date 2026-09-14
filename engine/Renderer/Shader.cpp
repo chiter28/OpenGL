@@ -111,7 +111,12 @@ void Shader::Compile(std::unordered_map<GLenum, std::string> shaderSources)
 			std::vector<char> infoLog(maxLength);
 			glGetShaderInfoLog(shader, maxLength, nullptr, infoLog.data());
 
-			glDeleteShader(shader);
+			for (auto id : shaderIDs)
+			{
+				glDetachShader(program, id);
+				glDeleteShader(id);
+			}
+
 			std::cerr << "Shader compilation Failure: " << infoLog.data() << std::endl;
 			break;
 		}
@@ -128,11 +133,12 @@ void Shader::Compile(std::unordered_map<GLenum, std::string> shaderSources)
 		int maxLength = 0;
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 		std::vector<char> infoLog(maxLength);
-		glGetProgramInfoLog(program, maxLength, &maxLength, infoLog.data());
+		glGetProgramInfoLog(program, maxLength, nullptr, infoLog.data());
 
 		glDeleteProgram(program);
 		for (auto id : shaderIDs)
 		{
+			glDetachShader(program, id);
 			glDeleteShader(id);
 		}
 		std::cerr << "Shader Program linking Failure: " << infoLog.data() << std::endl;
@@ -142,6 +148,12 @@ void Shader::Compile(std::unordered_map<GLenum, std::string> shaderSources)
 	for (auto id : shaderIDs)
 	{
 		glDetachShader(program, id);
+		glDeleteShader(id);
+	}
+
+	if (m_Program != 0)
+	{
+		glDeleteProgram(m_Program);
 	}
 
 	m_Program = program;

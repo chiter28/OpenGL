@@ -4,6 +4,12 @@
 
 
 
+VertexBuffer::VertexBuffer(const void* data, uint32_t size)
+{
+	glCreateBuffers(1, &m_VBO);
+	glNamedBufferStorage(m_VBO, size, data, 0);
+}
+
 // VertexBuffer
 VertexBuffer::VertexBuffer(const void* data, uint32_t size, const VertexBufferLayout& layout)
 	: m_Layout(layout)
