@@ -29,7 +29,15 @@ public:
 	~Mesh();
 
 	bool LoadMesh(const std::string& fileName, const std::shared_ptr<Shader>& shader);
-	void Render();
+
+
+	const std::shared_ptr<VertexArray>& GetVertexArray() const { return m_VertexArray; }
+	const std::vector<SubMeshElement>& GetSubMeshes() const { return m_SubMeshes; }
+	std::shared_ptr<Material> GetMaterial(uint32_t index) const
+	{
+		return (index < m_Materials.size()) ? m_Materials[index] : nullptr;
+	}
+
 
 private:
 	bool InitFromScene(const aiScene* scene, const std::string& fileName);
@@ -38,6 +46,8 @@ private:
 	void InitMaterials(const aiScene* scene, const std::string& fileName, const std::shared_ptr<Shader>& defaultShader);
 	bool IsMaterialTransparent(const aiMaterial* material);
 	void PopulateBuffers();
+
+
 
 private:
 	std::vector<SubMeshElement> m_SubMeshes;

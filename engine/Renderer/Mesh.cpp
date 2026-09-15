@@ -19,7 +19,7 @@ Mesh::~Mesh()
 bool Mesh::LoadMesh(const std::string& fileName, const std::shared_ptr<Shader>& shader)
 {
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_PreTransformVertices);
+	const aiScene* scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_PreTransformVertices | aiProcessPreset_TargetRealtime_MaxQuality);
 	
 	if (!scene) {
 		std::cerr << "Error parsing " << fileName << ": " << importer.GetErrorString();
@@ -107,7 +107,7 @@ void Mesh::InitMaterials(const aiScene* scene, const std::string& fileName, cons
 	{
 		const aiMaterial* material = scene->mMaterials[m];
 
-		m_Materials.emplace_back(std::make_shared<Material>(defaultShader));
+		m_Materials.push_back(std::make_shared<Material>(defaultShader));
 		m_Materials[m]->SetTransparent(IsMaterialTransparent(material));
 
 		std::shared_ptr<Texture> texture = nullptr;
@@ -137,11 +137,7 @@ void Mesh::InitMaterials(const aiScene* scene, const std::string& fileName, cons
 			}
 		}
 
-		aiColor3D specularColor(0.0f, 0.0f, 0.0f);
-		if (material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == AI_SUCCESS)
-		{
-			std::cout << "Specular";
-		}
+	
 
 
 		if (texture)
@@ -163,6 +159,12 @@ void Mesh::InitMaterials(const aiScene* scene, const std::string& fileName, cons
 			m_Materials[m]->SetVec4("u_Material.BaseColorFactor",
 				glm::vec4(baseColor.r, baseColor.g, baseColor.b, baseColor.a));
 		}
+
+
+
+		m_Materials[m]->SetVec3("u_Material.SpecularColor", glm::vec3(1.0f));
+		m_Materials[m]->SetFloat("u_Material.Shininess", 400.0f);
+
 	}
 }
 
@@ -204,55 +206,4 @@ void Mesh::PopulateBuffers()
 	m_Indices.clear();
 	m_Indices.shrink_to_fit();
 }
-
-
-void Mesh::Render()
-{
-	m_VertexArray->Bind();
-	
-	// Opaque materials
-	glDisable(GL_BLEND);
-	glDepthMask(GL_TRUE);
-	for (int m = 0; m < m_SubMeshes.size(); m++) {
-		uint32_t matIndex = m_SubMeshes[m].MaterialIndex;
-
-		if (matIndex >= m_Materials.size() || m_Materials[matIndex]->IsTransparent())
-			continue;
-
-		if (m_Materials[matIndex])
-			m_Materials[matIndex]->Bind();
-
-
-		glDrawElementsBaseVertex(GL_TRIANGLES,
-			m_SubMeshes[m].NumIndices,
-			GL_UNSIGNED_INT,
-			(const void*)(uintptr_t)(m_SubMeshes[m].BaseIndex * sizeof(uint32_t)),
-			m_SubMeshes[m].BaseVertex);
-	}
-
-
-	// Transparent materials
-	glEnable(GL_BLEND);
-	glDepthMask(GL_FALSE);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	for (int m = 0; m < m_SubMeshes.size(); m++) {
-		uint32_t matIndex = m_SubMeshes[m].MaterialIndex;
-
-		if (matIndex >= m_Materials.size() || !m_Materials[matIndex]->IsTransparent())
-			continue;
-
-		if (m_Materials[matIndex])
-			m_Materials[matIndex]->Bind();
-
-		glDrawElementsBaseVertex(GL_TRIANGLES,
-			m_SubMeshes[m].NumIndices,
-			GL_UNSIGNED_INT,
-			(const void*)(uintptr_t)(m_SubMeshes[m].BaseIndex * sizeof(uint32_t)),
-			m_SubMeshes[m].BaseVertex);
-	}
-
-	glDepthMask(GL_TRUE);
-	glDisable(GL_BLEND);
-}
-
 

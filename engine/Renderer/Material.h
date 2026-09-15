@@ -23,10 +23,14 @@ public:
 	void SetInt(const std::string& name, int value);
 	void SetVec3(const std::string& name, glm::vec3 value);
 	void SetVec4(const std::string& name, glm::vec4 value);
+	void SetMat4(const std::string& name, glm::mat4 value);
+
 	void SetTexture(const std::string& name, std::shared_ptr<Texture> texture, uint32_t slot = 0);
 	void SetTransparent(bool transparent) { m_IsTransparent = transparent; }
 
 	bool IsTransparent() const { return m_IsTransparent; }
+
+	std::shared_ptr<Shader>& GetShader() { return m_Shader; }
 
 private:
 	struct TextureBinding
@@ -36,12 +40,13 @@ private:
 	};
 
 private:
-	std::shared_ptr<Shader> m_Shader;
+	std::shared_ptr<Shader> m_Shader = nullptr;
 	// Shader Uniforms
 	std::unordered_map<std::string, float> m_Floats;
 	std::unordered_map<std::string, int> m_Ints;
 	std::unordered_map<std::string, glm::vec3> m_Vec3s;
 	std::unordered_map<std::string, glm::vec4> m_Vec4s;
+	std::unordered_map<std::string, glm::mat4> m_Mat4s;
 	std::unordered_map<std::string, TextureBinding> m_Textures;
 	bool m_IsTransparent = false;
 };

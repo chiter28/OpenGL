@@ -135,12 +135,13 @@ void Shader::Compile(std::unordered_map<GLenum, std::string> shaderSources)
 		std::vector<char> infoLog(maxLength);
 		glGetProgramInfoLog(program, maxLength, nullptr, infoLog.data());
 
-		glDeleteProgram(program);
 		for (auto id : shaderIDs)
 		{
 			glDetachShader(program, id);
 			glDeleteShader(id);
 		}
+
+		glDeleteProgram(program);
 		std::cerr << "Shader Program linking Failure: " << infoLog.data() << std::endl;
 		return;
 	}
@@ -162,6 +163,8 @@ void Shader::Compile(std::unordered_map<GLenum, std::string> shaderSources)
 
 void Shader::Bind() const
 {
+	if (m_Program == 0)
+		return;
 	glUseProgram(m_Program);
 }
 
@@ -177,6 +180,9 @@ void Shader::Unbind() const
 /////////////////////
 int Shader::GetUniformLocation(const std::string& name) const
 {
+	if (m_Program == 0)
+		return -1;
+
 	if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end()) {
 		return m_UniformLocationCache[name];
 	} 

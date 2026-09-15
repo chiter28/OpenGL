@@ -8,7 +8,8 @@ layout (location = 3) in vec3 a_InstanceOffset;
 layout (location = 4) in vec3 a_Normal;
 
 
-uniform mat4 u_ModelView;
+uniform mat4 u_Model; 
+uniform mat4 u_View;          
 uniform mat4 u_Projection;
 
 out vec3 FragPos;
@@ -17,12 +18,16 @@ out vec2 TexCoord;
 
 void main()
 {
-	vec4 viewPos = u_ModelView * vec4(a_Position, 1.0) + vec4(a_InstanceOffset, 0.0);
+	vec4 modelPos = u_Model * vec4(a_Position, 1.0) + vec4(a_InstanceOffset, 1.0);
+
+	vec4 viewPos = u_View * modelPos;
+
+
 
 	FragPos = vec3(viewPos);
-	Normal = mat3(u_ModelView) * a_Normal;
+	Normal = mat3(u_View) * mat3(u_Model) * a_Normal;
 	TexCoord = a_TexCoord;
-
+		
 	gl_Position = u_Projection * viewPos;
 }
 
@@ -62,19 +67,25 @@ uniform Material u_Material;
  
 void main()
 {
-	vec3 viewDir = normalize(-FragPos);
-	vec3 halfwayDir = normalize(u_Light.Direction + viewDir);
-	float specularFactor = pow(max(dot(normalize(Normal), halfwayDir), 0.0), u_Material.Shininess);
-	vec3 specularLight = u_Light.Color * u_Light.SpecularIntensity * specularFactor * u_Material.SpecularColor;
-
 
 	vec3 ambientLight = u_Light.Color * u_Light.AmbientIntensity;
-
+	vec3 diffuseLight =  vec3(0.0, 0.0, 0.0);
+	vec3 specularLight = vec3(0.0, 0.0, 0.0);
 
 	float diffuseFactor = max(dot(normalize(Normal), u_Light.Direction), 0.0);
-	vec3 diffuseLight =  vec3(0.0, 0.0, 0.0);
+
 	if (diffuseFactor > 0)
+	{
 		diffuseLight = u_Light.Color * diffuseFactor * u_Light.DiffuseIntensity;
+
+		vec3 viewDir = normalize(-FragPos);
+		vec3 halfwayDir = normalize(u_Light.Direction + viewDir);
+		float specularFactor = pow(max(dot(normalize(Normal), halfwayDir), 0.0), u_Material.Shininess);
+		if (specularFactor > 0.0)
+		{
+			specularLight = u_Light.Color * u_Light.SpecularIntensity * specularFactor * u_Material.SpecularColor;
+		}
+	}
 
 	FragColor = texture(u_AlbedoMap, TexCoord) *
 			   u_Material.BaseColorFactor *

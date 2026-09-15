@@ -124,7 +124,10 @@ public:
 		m_Shader = std::make_shared<Shader>("Resources/shaders/shader.glsl");
 		m_Shader->Bind();
 		m_Shader->SetInt("u_AlbedoMap", 0);
+
 		m_Shader->SetVec4("u_Material.BaseColorFactor", glm::vec4(1.0f));
+		m_Shader->SetVec3("u_Material.SpecularColor", glm::vec3(1.0f));
+		m_Shader->SetFloat("u_Material.Shininess", 400.0f);
 
 
 		m_Light = std::make_shared<DirectionalLight>();
@@ -143,12 +146,12 @@ public:
 
 		m_Light->CalculateViewDir(camera.GetView());
 	
-		glm::mat4 modelView = camera.GetView() * model;
-
 
 		m_Shader->Bind();
+		m_Shader->SetMat4("u_Model", model);
+		m_Shader->SetMat4("u_View", camera.GetView());
 		m_Shader->SetMat4("u_Projection", camera.GetPerspectiveProjection());
-		m_Shader->SetMat4("u_ModelView", modelView);
+
 		m_Light->Bind(*m_Shader);
 
 		if (m_Texture) {

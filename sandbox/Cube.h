@@ -134,12 +134,11 @@ public:
 
 		m_Light->CalculateViewDir(camera.GetView());
 
-		glm::mat4 modelView = camera.GetView() * model;
-
 
 		m_Shader->Bind();
+		m_Shader->SetMat4("u_Model", model);
+		m_Shader->SetMat4("u_View", camera.GetView());
 		m_Shader->SetMat4("u_Projection", camera.GetPerspectiveProjection());
-		m_Shader->SetMat4("u_ModelView", modelView);
 
 		m_Light->Bind(*m_Shader);
 

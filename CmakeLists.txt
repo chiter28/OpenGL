@@ -1,148 +1,295 @@
 cmake_minimum_required(VERSION 3.24)
 
-# --- Настройки проекта --- #
-# Объявляем имя проекта "OpenGL" и используемые языки (C++ и C)
-project(OpenGL CXX C)
 
-# Генерировать файл compile_commands.json (полезно для автодополнения в IDE / clangd)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# ============================================================================
+# Project
+# ============================================================================
+#
+project(OpenGL
+	VERSION 0.1.0
+	LANGUAGES CXX C
+)
 
-# Устанавливаем стандарт C++20 и делаем его обязательным
+
+# ============================================================================
+# Global Cmake settings
+# ============================================================================
+#
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF) # строгий стандарт ISO C++ для всех целей (отключить использование специфичных функций конкретного компилятора)
 
-# --- Внешние библиотеки (External) --- #
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # генерация файла compile_commands.json (для подсвечивания синтаксиса, навигации, автодополнения и статического анализа VS Code)
 
-# Отключаем сборку лишних компонентов GLFW (тесты, примеры, документация), чтобы ускорить сборку
+
+# ============================================================================
+# Dependencies 
+# ============================================================================
+#
+
+include(FetchContent)
+
+# ----------------------------------------------------------------------------
+# GLFW
+# ----------------------------------------------------------------------------
+#
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-# Подключаем GLFW из внутренней поддиректории
-add_subdirectory(external/glfw)
+set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
 
-# Объявляем статическую библиотеку для GLAD (загрузчик функций OpenGL)
-add_library(glad STATIC
-	external/glad/src/glad.c
-)
-# Делаем заголовочные файлы GLAD публично доступными для всех, кто линкует glad
-target_include_directories(glad PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
+FetchContent_Declare(
+	glfw
+	GIT_REPOSITORY https://github.com/glfw/glfw.git
+	GIT_TAG 3.5.1
 )
 
-# Объявляем статическую библиотеку для stb_image (загрузка текстур)
-add_library(stb_image STATIC
-	external/stb/stb_image.h
-	external/stb/stb_image.cpp
-)
-# Открываем доступ к заголовочным файлам stb
-target_include_directories(stb_image PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+FetchContent_MakeAvailable(glfw)
+
+
+# ----------------------------------------------------------------------------
+# GLM 
+# ----------------------------------------------------------------------------
+#
+set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY https://github.com/g-truc/glm.git
+	GIT_TAG 1.0.3
 )
 
-# Настройка и отключение неиспользуемых частей библиотеки Assimp (загрузка 3D-моделей)
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_INSTALL_PDB OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glm)
+
+
+# ----------------------------------------------------------------------------
+# fastgltf
+# ----------------------------------------------------------------------------
+#
+set(FASTGLTF_ENABLE_TESTS    OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_DOCS     OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_GLTF_RS  OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_ASSIMP   OFF CACHE BOOL "" FORCE)
+set(FASTGLTF_ENABLE_INSTALL  OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+	fastgltf
+	GIT_REPOSITORY https://github.com/spnda/fastgltf.git
+	GIT_TAG v0.9.0
+)
+
+FetchContent_MakeAvailable(fastgltf)
+
+
+# ----------------------------------------------------------------------------
+# Assimp
+# ----------------------------------------------------------------------------
+#
+set(BUILD_SHARED_LIBS                     OFF CACHE BOOL "" FORCE)
+
+set(ASSIMP_BUILD_TESTS                    OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS             OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_SAMPLES                  OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_DOCS                     OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL                        OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL_PDB                    OFF CACHE BOOL "" FORCE)
+
 set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
 
 # Включаем импорт только нужных 3D-форматов (.obj, .gltf/.glb, .fbx)
-set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_OBJ_IMPORTER  ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
-# Подключаем Assimp из исходников
-add_subdirectory(external/assimp)
+set(ASSIMP_BUILD_FBX_IMPORTER  ON CACHE BOOL "" FORCE)
 
-# =========================================================================
-# --- Target Движка Engine (Статическая библиотека .lib / .a) ---
-# =========================================================================
+FetchContent_Declare(
+	assimp
+	GIT_REPOSITORY https://github.com/assimp/assimp.git
+	GIT_TAG v6.0.5
+)
 
-# Рекурсивно собираем все файлы реализаций (.cpp, .c) внутри папки engine
-# CONFIGURE_DEPENDS заставляет CMake пересобирать проект при добавлении новых файлов
-file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
+FetchContent_MakeAvailable(assimp)
+
+
+
+
+
+
+# ============================================================================
+# Local dependencies
+# ============================================================================
+#
+
+
+# ----------------------------------------------------------------------------
+# GLAD
+# ----------------------------------------------------------------------------
+#
+add_library(glad STATIC
+	external/glad/src/glad.c
+)
+
+target_include_directories(glad
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
+)
+
+
+# ----------------------------------------------------------------------------
+# stb_image
+# ----------------------------------------------------------------------------
+#
+add_library(stb_image STATIC
+	external/stb/stb_image.cpp
+)
+
+target_include_directories(stb_image
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+)
+
+
+
+
+
+
+
+# ============================================================================
+# Engine
+# ============================================================================
+#
+file(GLOB_RECURSE ENGINE_SOURCES
+	CONFIGURE_DEPENDS
 	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.c"
 )
 
-# Рекурсивно собираем все заголовочные файлы (.h, .hpp) внутри папки engine
-file(GLOB_RECURSE ENGINE_HEADERS CONFIGURE_DEPENDS
-	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.h"
+file(GLOB_RECURSE ENGINE_HEADERS
+	CONFIGURE_DEPENDS
 	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/engine/*.h"
 )
 
-# Создаем статическую библиотеку движка под именем "engine"
 add_library(engine STATIC
 	${ENGINE_SOURCES}
 	${ENGINE_HEADERS}
 )
 
-# Пробрасываем путь к исходникам engine PUBLIC-ом,
-# чтобы все проекты (например, sandbox) могли делать #include "Core/Application.h"
-target_include_directories(engine PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}/engine
+target_include_directories(engine
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/engine
 )
 
-# Подключаем системные зависимости (GLAD и GLM) для движка без выдачи предупреждений компилятора (SYSTEM)
-target_include_directories(engine SYSTEM PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
-	${CMAKE_CURRENT_SOURCE_DIR}/external/glm
+target_link_libraries(engine
+	PUBLIC
+		glfw
+		glad
+		stb_image
+		glm::glm
+		fastgltf::fastgltf
+		assimp
 )
 
-# Связываем движок с внешними библиотеками
-target_link_libraries(engine PUBLIC glfw glad stb_image assimp)
+
+
+# ============================================================================
+# Engine compiler settings
+# ============================================================================
+#
+if(MSVC)
+
+	target_compile_options(engine
+		PRIVATE
+			/MP
+		    /W4
+			/wd26495
+			/external:anglebrackets
+            /external:W0
+	)
+
+endif()
 
 
 
 
-# =========================================================================
-# --- Target Исполняемого Файла Sandbox (.exe) ---
-# =========================================================================
 
-# Собираем все файлы исходного кода приложения из папки sandbox
-file(GLOB_RECURSE SANDBOX_SOURCES CONFIGURE_DEPENDS
+
+
+# ============================================================================
+# Sandbox
+# ============================================================================
+#
+file(GLOB_RECURSE SANDBOX_SOURCES
+	CONFIGURE_DEPENDS
 	"${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.h"
 )
 
-# Создаем исполняемый файл sandbox.exe
-add_executable(sandbox
+add_executable(sandbox 
 	${SANDBOX_SOURCES}
 )
 
-# Линкуем наш движок к исполняемому файлу (все PUBLIC зависимости engine подтянутся автоматически)
-target_link_libraries(sandbox PRIVATE engine)
-
-# --- Настройки компилятора MSVC (Visual Studio) --- #
-if(MSVC)
-    target_compile_options(engine PRIVATE
-        /wd26495                # Отключаем предупреждение об неинициализированных членах структуры
-        /external:anglebrackets # Игнорируем предупреждения во внешних библиотеках (<...>)
-        /external:W0
-    )
-	# Устанавливаем рабочую директорию отладчика Visual Studio в папку с итоговым exe-файлом
-	set_target_properties(sandbox PROPERTIES
-		VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:sandbox>"
-	)
-	# Включаем многопоточную сборку в MSVC (/MP)
-	add_compile_options(/MP)
-endif()
-
-# --- Копирование ресурсов --- #
-
-# Получаем список всех файлов ресурсов из папки Resources
-file(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/*")
-
-# Создаем кастомный таргет, который копирует ресурсы в папку с собранным .exe файлом
-add_custom_target(CopyResources ALL
-	COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:sandbox>/Resources"
-	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-	"${CMAKE_CURRENT_SOURCE_DIR}/Resources"
-	"$<TARGET_FILE_DIR:sandbox>/Resources"
-	SOURCES ${RESOURCE_FILES}
-	COMMENT "Copying modified resources to sandbox..."
+target_link_libraries(sandbox
+	PRIVATE
+		engine
 )
 
-# Заставляем sandbox ждатъ выполнения копирования ресурсов перед/после сборки
-add_dependencies(sandbox CopyResources)
+# ============================================================================
+# Sandbox compiler settings
+# ============================================================================
+#
+if(MSVC)
+
+	target_compile_options(sandbox
+		PRIVATE
+			/W4
+            /MP
+	)
+    
+	set_target_properties(sandbox PROPERTIES # меняет Working Directory на дерикторию где лежит исполняемый файл .exe
+		VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:sandbox>"
+	)
+
+endif()
+
+
+
+# ============================================================================
+# Resources
+# ============================================================================
+#
+set(RESOURCE_DIRECTORY
+	"${CMAKE_CURRENT_SOURCE_DIR}/Resources"
+)
+
+add_custom_command(
+	TARGET sandbox
+	POST_BUILD
+
+	COMMAND ${CMAKE_COMMAND} -E make_directory
+		"$<TARGET_FILE_DIR:sandbox>/Resources"
+
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${RESOURCE_DIRECTORY}"
+		"$<TARGET_FILE_DIR:sandbox>/Resources"
+	
+	COMMENT "Copying resources..."
+)
+
+
+
+
+# ============================================================================
+# Information
+# ============================================================================
+#
+message(STATUS "")
+message(STATUS "========================================")
+message(STATUS " OpenGL Engine")
+message(STATUS "========================================")
+message(STATUS " C++ standard : C++${CMAKE_CXX_STANDARD}")
+message(STATUS " Compiler     : ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS " Build type   : ${CMAKE_BUILD_TYPE}")
+message(STATUS "========================================")
+message(STATUS "")
