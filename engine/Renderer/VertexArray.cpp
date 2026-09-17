@@ -4,6 +4,8 @@
 
 static uint32_t GetAttributeLocation(VertexAttribute attrib)
 {
+	static constexpr uint32_t InvalidAttributeLocation = std::numeric_limits<uint32_t>::max();
+
 	switch (attrib)
 	{
 		case VertexAttribute::Position:	  return 0;
@@ -11,7 +13,8 @@ static uint32_t GetAttributeLocation(VertexAttribute attrib)
 		case VertexAttribute::TexCoord:	  return 2;
 		case VertexAttribute::Instance:	  return 3;
 		case VertexAttribute::Normal:	  return 4;
-		default: return 999;
+		case VertexAttribute::Tangent:	  return 5;
+		default: return InvalidAttributeLocation;
 	}
 }
 
@@ -93,7 +96,7 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuf
 	}
 
 	m_VertexBuffers.emplace_back(vertexBuffer);
-	m_VertexBindingIndex++;
+	++m_VertexBindingIndex;
 }
 
 

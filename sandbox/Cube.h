@@ -8,7 +8,12 @@
 #include "Renderer/Camera.h"
 #include "Renderer/Light.h"
 
+
+#include "Renderer/Model.h"
+
 #include "Core/Input.h"
+
+#include "Renderer/Renderer3D.h"
 
 #include <glm/glm.hpp>
 
@@ -22,6 +27,7 @@ public:
 
 	void OnAttach() override
 	{
+
 		std::vector<Vertex<Position, Color, TexCoord, Normal>> vertices
 		{
 			{ Position{{-0.5f, -0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 0.0f}}, Normal{{0.0f, 0.0f, 0.0f}} },
@@ -55,10 +61,7 @@ public:
 			{ Position{{-0.5f, -0.5f,  0.5f}}, Color{{1.0f, 1.0f, 1.0f}}, TexCoord{{0.0f, 1.0f}}, Normal{{0.0f, 0.0f, 0.0f}} }
 		};
 
-
-
-
-		std::array<uint32_t, 36> indices = {
+		std::vector<uint32_t> indices = {
 			// Передняя
 			0, 1, 2,   2, 3, 0,
 			// Задняя
@@ -74,6 +77,7 @@ public:
 		};
 
 
+		// vertices Normals
 		for (size_t i = 0; i < indices.size(); i += 3)
 		{
 			uint32_t i0 = indices[i];
@@ -101,21 +105,61 @@ public:
 			}
 		}
 
-		std::shared_ptr<VertexBuffer> vertexBuffer = VertexBuffer::Create(vertices);
-		std::shared_ptr<IndexBuffer> indexBuffer = std::make_shared<IndexBuffer>(indices);
-
-		m_VertexArray = std::make_shared<VertexArray>(vertexBuffer, indexBuffer);
 
 
-		m_Texture = std::make_shared<Texture>("Resources/textures/guc.png");
 
-		m_Shader = std::make_shared<Shader>("Resources/shaders/shader.glsl");
-		m_Shader->Bind();
-		m_Shader->SetInt("u_AlbedoMap", 0);
+		// init model
+
+		std::vector<SubMesh2> subMeshes = {
+			 {
+				.indexOffset = 0,
+				.indexCount = 18,
+				.vertexOffset = 0,
+				.materialIndex = 0
+			},
+			{
+				.indexOffset = 18,
+				.indexCount = 18,
+				.vertexOffset = 0,
+				.materialIndex = 1
+			}
+		};
 		
-		m_Shader->SetVec4("u_Material.BaseColorFactor", glm::vec4(1.0f));
-		m_Shader->SetVec3("u_Material.SpecularColor", glm::vec3(1.0f));
-		m_Shader->SetFloat("u_Material.Shininess", 400.0f);
+
+
+
+		ModelData data;
+
+		// mesh
+		ModelData::MeshData meshData = {
+			.Vertices = std::move(vertices),
+			.Indices = std::move(indices),
+			.SubMeshes = std::move(subMeshes)
+		};
+		data.Meshes.emplace_back(std::move(meshData));
+
+		// material
+		auto material = std::make_shared<Material>();
+		material->BaseColor = glm::vec4(1.0f);
+		material->SpecularColor = glm::vec3(1.0f);
+		material->Shininess = 400.0f;
+		material->BaseColorTexture = std::make_shared<Texture>("Resources/textures/guc.png");	
+
+		// material1
+		auto material1 = std::make_shared<Material>();
+		material1->BaseColor = glm::vec4(1.0f);
+		material1->SpecularColor = glm::vec3(1.0f);
+		material1->Shininess = 400.0f;
+		material1->BaseColorTexture = std::make_shared<Texture>("Resources/textures/image.JPEG");
+
+		data.Materials.emplace_back(material);
+		data.Materials.emplace_back(material1);
+
+		m_Model = std::make_shared<Model>(std::move(data));
+
+
+		Renderer3D::Init();
+	
 
 		m_Light = std::make_shared<DirectionalLight>();
 	}
@@ -130,25 +174,12 @@ public:
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 		i += 0.002f;
 
-		SetLightDirection();
+	
 
-		m_Light->CalculateViewDir(camera.GetView());
-
-
-		m_Shader->Bind();
-		m_Shader->SetMat4("u_Model", model);
-		m_Shader->SetMat4("u_View", camera.GetView());
-		m_Shader->SetMat4("u_Projection", camera.GetPerspectiveProjection());
-
-		m_Light->Bind(*m_Shader);
-
-		if (m_Texture) {
-			m_Texture->Bind(0);
-		}
-
-
-		m_VertexArray->Bind();
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+		
+		Renderer3D::BeginScene(camera, *m_Light);
+		Renderer3D::DrawModel(m_Model, model);
+		Renderer3D::EndScene();
 		
 	}
 
@@ -168,7 +199,5 @@ public:
 
 private:
 	std::shared_ptr<DirectionalLight> m_Light;
-	std::shared_ptr<VertexArray> m_VertexArray;
-	std::shared_ptr<Shader> m_Shader;
-	std::shared_ptr<Texture> m_Texture;
+	std::shared_ptr<Model> m_Model;
 };

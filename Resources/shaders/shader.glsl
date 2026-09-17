@@ -18,14 +18,16 @@ out vec2 TexCoord;
 
 void main()
 {
-	vec4 modelPos = u_Model * vec4(a_Position, 1.0) + vec4(a_InstanceOffset, 1.0);
+	vec4 modelPos = u_Model * vec4(a_Position, 1.0) + vec4(a_InstanceOffset, 0.0);
 
 	vec4 viewPos = u_View * modelPos;
 
 
-
 	FragPos = vec3(viewPos);
-	Normal = mat3(u_View) * mat3(u_Model) * a_Normal;
+	
+	mat3 normalMatrix = transpose(inverse(mat3(u_View * u_Model)));
+	Normal = normalMatrix * a_Normal;
+	
 	TexCoord = a_TexCoord;
 		
 	gl_Position = u_Projection * viewPos;

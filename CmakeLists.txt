@@ -259,24 +259,20 @@ endif()
 # Resources
 # ============================================================================
 #
+
 set(RESOURCE_DIRECTORY
-	"${CMAKE_CURRENT_SOURCE_DIR}/Resources"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Resources"
 )
 
-add_custom_command(
-	TARGET sandbox
-	POST_BUILD
+add_custom_target(CopyResources ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${RESOURCE_DIRECTORY}"
+        "$<TARGET_FILE_DIR:sandbox>/Resources"
 
-	COMMAND ${CMAKE_COMMAND} -E make_directory
-		"$<TARGET_FILE_DIR:sandbox>/Resources"
-
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${RESOURCE_DIRECTORY}"
-		"$<TARGET_FILE_DIR:sandbox>/Resources"
-	
-	COMMENT "Copying resources..."
+    COMMENT "Copying resources..."
 )
 
+add_dependencies(sandbox CopyResources)
 
 
 

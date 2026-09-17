@@ -11,7 +11,7 @@ int main()
     App app;
 
      
-    app.SetSandbox<Barrel>();
+    app.SetSandbox<Cube>();
       
     app.Run();
 

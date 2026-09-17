@@ -16,15 +16,16 @@
 
 class Camera;
 class DirectionalLight;
-class Mesh;
+class Model;
+class Shader;
 
 
 class Renderer3D
 {
 public:
-    struct RenderCommund
+    struct RenderCommand
     {
-        std::shared_ptr<Mesh> MeshAsset;
+        std::shared_ptr<Model> ModelAsset;
         glm::mat4 Transform;
     };
     
@@ -36,14 +37,18 @@ public:
     };
 
 public:
+    static void Init();
+
     static void BeginScene(const Camera& camera, const DirectionalLight& light);
     static void EndScene();
-    static void DrawMesh(const std::shared_ptr<Mesh>& mesh, const glm::mat4& transform);
+    static void DrawModel(const std::shared_ptr<Model>& model, const glm::mat4& transform);
 
 private:
     static void RenderPass(bool transparentPass);
 
 private:
-    inline static std::vector<RenderCommund> s_DrawQueue;
+    inline static std::shared_ptr<Shader> s_Shader;
+
+    inline static std::vector<RenderCommand> s_DrawQueue;
     inline static SceneData s_SceneData;
 };

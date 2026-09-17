@@ -13,6 +13,7 @@ enum class VertexAttribute
 	Color,
 	TexCoord,
 	Normal,
+	Tangent,
 	Instance
 };
 
@@ -24,6 +25,7 @@ struct Color	{ glm::vec3 color; };
 struct TexCoord { glm::vec2 texCoord; };
 struct Normal   { glm::vec3 normal; };
 struct Instance { glm::vec3 instance; };
+struct Tangent  { glm::vec4 tangent; };
 
 
 
@@ -117,6 +119,11 @@ template<> struct ComponentTraits<Normal>
 	static constexpr VertexBufferLayout::ShaderDataType Type = VertexBufferLayout::ShaderDataType::Float3;
 };
 
+template<> struct ComponentTraits<Tangent>
+{
+	static constexpr VertexAttribute Attribute = VertexAttribute::Tangent;
+	static constexpr VertexBufferLayout::ShaderDataType Type = VertexBufferLayout::ShaderDataType::Float4;
+};
 
 template<typename T>
 struct BufferLayoutTraits

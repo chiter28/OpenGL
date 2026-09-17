@@ -6,37 +6,8 @@
 #include <memory>
 
 #include <glm/glm.hpp>
+
 #include "Layout.h"
-
-enum class BufferType
-{
-	Position = 0,
-	TexCoord,
-	Count
-};
-
-
-class MultiVertexBuffer
-{
-public:
-
-	MultiVertexBuffer();
-	~MultiVertexBuffer();
-
-
-
-
-	void SetData(BufferType type, const void* data, uint32_t size);
-	void SetLayout(BufferType type, VertexAttribute vertexAttribute);
-
-	uint32_t GetID(BufferType type) const { return m_Buffers[static_cast<size_t>(type)]; }
-	const VertexBufferLayout& GetLayout(BufferType type) const { return m_Layouts[static_cast<size_t>(type)]; }
-
-private:
-	uint32_t m_Buffers[static_cast<size_t>(BufferType::Count)];
-	VertexBufferLayout m_Layouts[static_cast<size_t>(BufferType::Count)];
-};
-
 
 
 
@@ -90,4 +61,48 @@ public:
 
 private:
 	uint32_t m_IBO;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////
+
+enum class BufferType
+{
+	Position = 0,
+	TexCoord,
+	Count
+};
+
+
+class MultiVertexBuffer
+{
+public:
+
+	MultiVertexBuffer();
+	~MultiVertexBuffer();
+
+
+
+
+	void SetData(BufferType type, const void* data, uint32_t size);
+	void SetLayout(BufferType type, VertexAttribute vertexAttribute);
+
+	uint32_t GetID(BufferType type) const { return m_Buffers[static_cast<size_t>(type)]; }
+	const VertexBufferLayout& GetLayout(BufferType type) const { return m_Layouts[static_cast<size_t>(type)]; }
+
+private:
+	uint32_t m_Buffers[static_cast<size_t>(BufferType::Count)];
+	VertexBufferLayout m_Layouts[static_cast<size_t>(BufferType::Count)];
 };
