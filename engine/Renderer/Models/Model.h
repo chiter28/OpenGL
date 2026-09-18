@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "Mesh2.h"
-#include "Material2.h"
+#include "Renderer/Geometry/Mesh2.h"
+#include "Renderer/Materials/Material2.h"
 
 #include "ModelData.h"
 

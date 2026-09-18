@@ -1,5 +1,9 @@
 #include "VertexArray.h"
-#include "../Utils.h"
+
+#include <utility>
+#include <limits>
+
+
 #include <glad/glad.h>
 
 static uint32_t GetAttributeLocation(VertexAttribute attrib)

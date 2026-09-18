@@ -1,6 +1,6 @@
 #include "Light.h"
 
-#include "Renderer/Shader.h"
+#include "Renderer/Resources/Shader.h"
 
 
 void BaseLight::Bind(Shader& shader) const

@@ -1,24 +1,21 @@
 #pragma once
 
+#include <memory>
+#include <array>
+
 #include "Core/Sandbox.h"
-
-#include "Renderer/VertexArray.h"
-#include "Renderer/Shader.h"
-#include "Renderer/Texture.h"
-#include "Renderer/Camera.h"
-#include "Renderer/Light.h"
-
-
-#include "Renderer/Model.h"
-
 #include "Core/Input.h"
 
+#include "Renderer/Scene/Light.h"
 #include "Renderer/Renderer3D.h"
+#include "Renderer/Models/Model.h"
+
+
+
+
 
 #include <glm/glm.hpp>
 
-#include <memory>
-#include <array>
 
 class Cube : public Sandbox
 {
@@ -110,7 +107,7 @@ public:
 
 		// init model
 
-		std::vector<SubMeshData> subMeshes = {
+		std::vector<SubMesh> subMeshes = {
 			 {
 				.IndexOffset = 0,
 				.IndexCount = 18,
@@ -138,6 +135,8 @@ public:
 		};
 		data.Meshes.emplace_back(std::move(meshData));
 
+
+		// texture
 		TextureData texture;
 		texture.Data = FileTextureData
 		{ 
@@ -170,9 +169,9 @@ public:
 
 		MaterialData materialData2
 		{
-			.BaseColor = glm::vec4(1.0f),
+			.BaseColor = glm::vec4(1.0f, 0.3f, 0.5f, 1.0f),
 			.SpecularColor = glm::vec3(1.0f),
-			.Shininess = 400.0f,
+			.Shininess = 40.0f,
 			.BaseColorTextureIndex = 1
 		};
 		
@@ -200,7 +199,7 @@ public:
 		i += 0.002f;
 
 	
-
+		SetLightDirection();
 		
 		Renderer3D::BeginScene(camera, *m_Light);
 		Renderer3D::DrawModel(m_Model, model);

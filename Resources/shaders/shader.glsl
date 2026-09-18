@@ -89,7 +89,10 @@ void main()
 		}
 	}
 
-	FragColor = texture(u_AlbedoMap, TexCoord) *
-			   u_Material.BaseColorFactor *
-			   vec4(ambientLight + diffuseLight + specularLight, 1.0); 
+
+
+	vec4 baseColor = texture(u_AlbedoMap, TexCoord) * u_Material.BaseColorFactor;
+	vec3 color = baseColor.rgb * (ambientLight + diffuseLight) + specularLight; 
+
+	FragColor = vec4(color, baseColor.a);
 }

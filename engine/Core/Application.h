@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include "Window.h"
-#include "Renderer/Camera.h"
+#include "Renderer/Scene/Camera.h"
 #include "Events/EventQueue.h"
 #include "Core/Sandbox.h"
 

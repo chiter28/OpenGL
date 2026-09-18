@@ -5,7 +5,9 @@
 #include <filesystem>
 #include <limits>
 
-#include "Layout.h"
+#include "Renderer/Resources/Layout.h"
+#include "Renderer/Geometry/MeshTypes.h"
+
 
 // ---------------------------
 // Texture Data
@@ -72,23 +74,11 @@ struct MaterialData//
 // Mesh Data
 // ---------------------------
 //
-struct SubMeshData
-{
-	static constexpr uint32_t InvalidMaterialIndex = std::numeric_limits<uint32_t>::max();
-
-	uint32_t IndexOffset = 0;
-	uint32_t IndexCount = 0;
-	uint32_t VertexOffset = 0;
-	uint32_t MaterialIndex = InvalidMaterialIndex;
-};
-
-using ModelVertex = Vertex<Position, Color, TexCoord, Normal>;
-
 struct MeshData
 {
 	std::vector<ModelVertex> Vertices;
 	std::vector<uint32_t> Indices;
-	std::vector<SubMeshData> SubMeshes;
+	std::vector<SubMesh> SubMeshes;
 };
 
 
@@ -105,3 +95,6 @@ struct ModelData
 	std::vector<MaterialData> Materials;
 	std::vector<TextureData> Textures;
 };
+
+// Checks the CPU contract before uploading resources. Throws std::invalid_argument.
+void ValidateModelData(const ModelData& data);

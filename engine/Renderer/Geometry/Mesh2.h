@@ -6,8 +6,9 @@
 
 #include <glm/glm.hpp>
 
-#include "VertexArray.h"
+#include "Renderer/Resources/VertexArray.h"
 
+#include "MeshTypes.h"
 
 
 enum class ModelLoaderBackend
@@ -20,21 +21,11 @@ enum class ModelLoaderBackend
 
 
 
-struct SubMesh
-{
-	static constexpr uint32_t InvalidMaterialIndex = std::numeric_limits<uint32_t>::max();
-	
-	uint32_t IndexOffset = 0;
-	uint32_t IndexCount = 0;
-	uint32_t VertexOffset = 0;
-	uint32_t MaterialIndex = InvalidMaterialIndex;
-};
 
 
 class Mesh
 {
 public:
-	using VertexType = Vertex<Position, Color, TexCoord, Normal>;
 
 	Mesh(Mesh&&) noexcept = default;
 	Mesh& operator=(Mesh&&) noexcept = default;
@@ -46,7 +37,7 @@ public:
 
 
 	// main constructor
-	Mesh(std::vector<VertexType> vertices, std::vector<uint32_t> indices, std::vector<SubMesh> subMeshes);
+	Mesh(std::vector<ModelVertex> vertices, std::vector<uint32_t> indices, std::vector<SubMesh> subMeshes);
 	
 
 	const VertexArray&           GetVertexArray()  const noexcept { return *m_VertexArray; }

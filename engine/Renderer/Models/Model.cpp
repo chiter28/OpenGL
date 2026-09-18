@@ -45,20 +45,17 @@ namespace
 
 Model::Model(ModelData data)
 {
+	ValidateModelData(data);
+
 	// move Mesh Data to m_Meshes
 	m_Meshes.reserve(data.Meshes.size());
+
 	for (auto& meshData : data.Meshes)
 	{
-		std::vector<SubMesh> subMeshes;
-		for (auto& subMesh : meshData.SubMeshes)
-		{
-			subMeshes.push_back({ subMesh.IndexOffset, subMesh.IndexCount, subMesh.VertexOffset, subMesh.MaterialIndex });
-		}
-		
 		m_Meshes.emplace_back(
 	        std::move(meshData.Vertices),
 			std::move(meshData.Indices),
-			std::move(subMeshes)
+			std::move(meshData.SubMeshes)
 		);
 	}
 

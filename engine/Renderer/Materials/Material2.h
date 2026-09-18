@@ -4,7 +4,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Texture.h"
+#include "Renderer/Resources/Texture.h"
 
 
 class Material

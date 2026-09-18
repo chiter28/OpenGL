@@ -3,8 +3,8 @@
 
 #include <string>
 #include <unordered_map>
-#include "../Utils.h"
 
+#include <glm/glm.hpp>
 
 class Shader
 {

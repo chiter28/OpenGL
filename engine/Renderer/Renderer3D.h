@@ -10,8 +10,7 @@
 
 
 // internal
-#include "Renderer/Light.h"
-
+#include "Scene/Light.h"
 
 
 class Camera;

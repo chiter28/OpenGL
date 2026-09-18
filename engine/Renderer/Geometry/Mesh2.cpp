@@ -1,7 +1,7 @@
 #include "Mesh2.h"
 
 
-Mesh::Mesh(std::vector<VertexType> vertices, std::vector<uint32_t> indices, std::vector<SubMesh> subMeshes)
+Mesh::Mesh(std::vector<ModelVertex> vertices, std::vector<uint32_t> indices, std::vector<SubMesh> subMeshes)
 	: m_SubMeshes(std::move(subMeshes))
 {
 	std::shared_ptr<VertexBuffer> vertexBuffer = VertexBuffer::Create(vertices);

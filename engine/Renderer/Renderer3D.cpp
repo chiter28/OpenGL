@@ -2,9 +2,9 @@
 
 #include <glad/glad.h>
 
-#include "Model.h"
-#include "Camera.h"
-#include "Shader.h"
+#include "Models/Model.h"
+#include "Scene/Camera.h"
+#include "Resources/Shader.h"
 
 
 
