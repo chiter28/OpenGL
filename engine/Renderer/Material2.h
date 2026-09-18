@@ -15,12 +15,11 @@ public:
 	float Metallic = 0.0f;
 	float Roughness = 1.0f;
 
+	glm::vec3 Emissive{ 0.0f };
 
-	
+	// Temporary Blinn-Phong parameters while the current shader is used.
 	glm::vec3 SpecularColor{ 1.0f };
 	float Shininess = 400.0f;
-
-	glm::vec3 Emissive{ 0.0f };
 
 	std::shared_ptr<Texture> BaseColorTexture;
 	std::shared_ptr<Texture> NormalTexture;
@@ -29,4 +28,5 @@ public:
 	std::shared_ptr<Texture> EmissiveTexture;
 
 	bool Transparent = false;
+
 };

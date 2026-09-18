@@ -13,10 +13,53 @@ Shader::Shader(const std::string& filePath)
 	Compile(shaders);
 }
 
+Shader::Shader(Shader&& other) noexcept
+	: m_Program(std::exchange(other.m_Program, 0)),
+	  m_UniformLocationCache(std::move(other.m_UniformLocationCache))
+{}
+
+Shader& Shader::operator=(Shader && other) noexcept
+{
+	if (this == &other)
+		return *this;
+
+	Release();
+
+	m_Program = std::exchange(other.m_Program, 0);
+	m_UniformLocationCache = std::move(other.m_UniformLocationCache);
+}
+
 Shader::~Shader()
 {
-	glDeleteProgram(m_Program);
+	Release();
 }
+
+
+void Shader::Bind() const
+{
+	if (m_Program != 0)
+		glUseProgram(m_Program);
+}
+
+void Shader::Unbind() const
+{
+	glUseProgram(0);
+}
+
+void Shader::Release()
+{
+	if (m_Program != 0)
+	{
+		glDeleteProgram(m_Program);
+		m_Program = 0;
+	}
+	m_UniformLocationCache.clear();
+}
+
+
+
+
+
 
 static GLenum ShaderTypeFromString(const std::string& type)
 {
@@ -70,15 +113,21 @@ std::unordered_map<GLenum, std::string> Shader::PreProcess(const std::string& so
 		}
 		size_t begin = pos + typeTokenLength + 1;
 		std::string type = source.substr(begin, eol - begin); // type? - vertex or fragment
-		if (!ShaderTypeFromString(type)) {
+
+		GLenum shaderType = ShaderTypeFromString(type);
+		if (shaderType == 0) {
 			std::cerr << "Invalid Shader type" << std::endl;
+			break;
 		}
 		
 		size_t nextLinePos = source.find_first_not_of("\r\n", eol);
 
 		pos = source.find(typeToken, nextLinePos);
-
-		shaderSource[ShaderTypeFromString(type)] = source.substr(nextLinePos, pos - nextLinePos);
+		if (pos != std::string::npos) {
+			shaderSource[shaderType] = source.substr(nextLinePos, pos - nextLinePos);
+		} else {
+			shaderSource[shaderType] = source.substr(nextLinePos);
+		}
 	}
 
 	return shaderSource;
@@ -152,25 +201,9 @@ void Shader::Compile(std::unordered_map<GLenum, std::string> shaderSources)
 		glDeleteShader(id);
 	}
 
-	if (m_Program != 0)
-	{
-		glDeleteProgram(m_Program);
-	}
+	Release();
 
 	m_Program = program;
-}
-
-
-void Shader::Bind() const
-{
-	if (m_Program == 0)
-		return;
-	glUseProgram(m_Program);
-}
-
-void Shader::Unbind() const
-{
-	glUseProgram(0);
 }
 
 
@@ -182,20 +215,22 @@ int Shader::GetUniformLocation(const std::string& name) const
 {
 	if (m_Program == 0)
 		return -1;
-
-	if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end()) {
-		return m_UniformLocationCache[name];
+	
+	auto it = m_UniformLocationCache.find(name);
+ 
+	if (it != m_UniformLocationCache.end()) {
+		return it->second;
 	} 
-	else {
-		m_UniformLocationCache[name] = glGetUniformLocation(m_Program, name.c_str());
-		return m_UniformLocationCache[name];
-	}
+	
+	GLint location = glGetUniformLocation(m_Program, name.c_str());
+	m_UniformLocationCache[name] = location;
+	return location;
 }
 
 
 void Shader::SetFloat(const std::string& name, float fval)
 {
-	int location = GetUniformLocation(name.c_str());
+	int location = GetUniformLocation(name);
 	if (location == -1) {
 		std::cerr << "Error: uniform " << name << " not found" << std::endl;
 		return;
@@ -205,7 +240,7 @@ void Shader::SetFloat(const std::string& name, float fval)
 
 void Shader::SetInt(const std::string& name, int ival)
 {
-	int location = GetUniformLocation(name.c_str());
+	int location = GetUniformLocation(name);
 	if (location == -1) {
 		std::cerr << "Error: uniform " << name << " not found" << std::endl;
 		return;
@@ -215,7 +250,7 @@ void Shader::SetInt(const std::string& name, int ival)
 
 void Shader::SetVec3(const std::string& name, glm::vec3 vec3)
 {
-	int location = GetUniformLocation(name.c_str());
+	int location = GetUniformLocation(name);
 	if (location == -1) {
 		std::cerr << "Error: uniform " << name << " not found" << std::endl;
 		return;
@@ -225,7 +260,7 @@ void Shader::SetVec3(const std::string& name, glm::vec3 vec3)
 
 void Shader::SetVec4(const std::string& name, glm::vec4 vec4)
 {
-	int location = GetUniformLocation(name.c_str());
+	int location = GetUniformLocation(name);
 	if (location == -1) {
 		std::cerr << "Error: uniform " << name << " not found" << std::endl;
 		return;
@@ -235,7 +270,7 @@ void Shader::SetVec4(const std::string& name, glm::vec4 vec4)
 
 void Shader::SetMat4(const std::string& name, const glm::mat4& mat4)
 {
-	int location = GetUniformLocation(name.c_str());
+	int location = GetUniformLocation(name);
 	if (location == -1) {
 		std::cerr << "Error: uniform " << name << " not found" << std::endl;
 		return;

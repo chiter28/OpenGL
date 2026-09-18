@@ -9,10 +9,20 @@
 class Shader
 {
 public:
-	Shader(const std::string& filePath);
+	explicit Shader(const std::string& filePath);
+
+	Shader(const Shader&) = delete;
+	Shader& operator=(const Shader&) = delete;
+
+	Shader(Shader&& other) noexcept;
+	Shader& operator=(Shader&& other) noexcept;
+
+
 	~Shader();
 	void Bind() const;
 	void Unbind() const;
+
+	void Release();
 
 	void SetFloat(const std::string& name, float fval);
 	void SetInt(const std::string& name, int ival);

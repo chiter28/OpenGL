@@ -17,6 +17,15 @@ public:
 
 	VertexBuffer(const void* data, uint32_t size);
 
+	// Disable copying 
+	VertexBuffer(const VertexBuffer&) = delete;
+	VertexBuffer& operator=(const VertexBuffer&) = delete;
+
+	// Allowing movement
+	VertexBuffer(VertexBuffer&& other) noexcept;
+	VertexBuffer& operator=(VertexBuffer&& other) noexcept;
+
+
 	template<typename T>
 	static std::shared_ptr<VertexBuffer> Create(const std::vector<T>& data)
 	{
@@ -30,19 +39,18 @@ public:
 
 	VertexBuffer(const void* data, uint32_t size, const VertexBufferLayout& layout = {});
 
-
 	~VertexBuffer();
 
 
-
+	void Release();
 	void SetLayout(const std::initializer_list<VertexAttribute>& vertexAttributes);
 	void SetLayout(const VertexBufferLayout& layout) { m_Layout = layout; }
 
-	uint32_t GetID() const { return m_VBO; }
+	uint32_t GetID() const { return m_ID; }
 	const VertexBufferLayout& GetLayout() const { return m_Layout; }
 
 private:
-	uint32_t m_VBO;
+	uint32_t m_ID = 0;
 	VertexBufferLayout m_Layout;
 };
 
@@ -54,13 +62,22 @@ class IndexBuffer
 {
 public:
 
+	// Disable copying 
+	IndexBuffer(const IndexBuffer&) = delete;
+	IndexBuffer& operator=(const IndexBuffer&) = delete;
+
+	// Allowing movement
+	IndexBuffer(IndexBuffer&& other) noexcept;
+	IndexBuffer& operator=(IndexBuffer&& other) noexcept;
+
 	IndexBuffer(std::span<uint32_t> indexBuffer);
 	~IndexBuffer();
 
-	uint32_t GetID() const { return m_IBO; }
+	void Release();
+	uint32_t GetID() const { return m_ID; }
 
 private:
-	uint32_t m_IBO;
+	uint32_t m_ID = 0;
 };
 
 

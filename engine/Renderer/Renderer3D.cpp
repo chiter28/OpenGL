@@ -62,9 +62,9 @@ void Renderer3D::RenderPass(bool transparentPass)
 		{
 			mesh.GetVertexArray().Bind();
 
-			for (const auto& subMesh : mesh.GetSubMesh2es())
+			for (const auto& subMesh : mesh.GetSubMeshes())
 			{
-				const auto& material = model->GetMaterial(subMesh.materialIndex);
+				const auto& material = model->GetMaterial(subMesh.MaterialIndex);
 				if (!material || material->Transparent != transparentPass)
 					continue;
 
@@ -95,10 +95,10 @@ void Renderer3D::RenderPass(bool transparentPass)
 				}
 
 				glDrawElementsBaseVertex(GL_TRIANGLES,
-					subMesh.indexCount,
+					subMesh.IndexCount,
 					GL_UNSIGNED_INT,
-					(const void*)(uintptr_t)(subMesh.indexOffset * sizeof(uint32_t)),
-					subMesh.vertexOffset
+					(const void*)(uintptr_t)(subMesh.IndexOffset * sizeof(uint32_t)),
+					subMesh.VertexOffset
 				);
 			}
 		}

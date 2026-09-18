@@ -106,6 +106,12 @@ uint32_t VertexBufferLayout::GetShaderDataTypeSize(ShaderDataType type)
 	}
 }
 
+void VertexBufferLayout::Clear()
+{
+	m_BufferElements.clear();
+	m_Stride = 0;
+}
+
 uint32_t VertexBufferLayout::ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
 {
 	switch (type)

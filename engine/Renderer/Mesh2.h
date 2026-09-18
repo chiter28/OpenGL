@@ -20,36 +20,40 @@ enum class ModelLoaderBackend
 
 
 
-struct SubMesh2
+struct SubMesh
 {
 	static constexpr uint32_t InvalidMaterialIndex = std::numeric_limits<uint32_t>::max();
 	
-	uint32_t indexOffset = 0;
-	uint32_t indexCount = 0;
-	uint32_t vertexOffset = 0;
-	uint32_t materialIndex = InvalidMaterialIndex;
+	uint32_t IndexOffset = 0;
+	uint32_t IndexCount = 0;
+	uint32_t VertexOffset = 0;
+	uint32_t MaterialIndex = InvalidMaterialIndex;
 };
 
 
-class Mesh2
+class Mesh
 {
 public:
 	using VertexType = Vertex<Position, Color, TexCoord, Normal>;
 
-	Mesh2(Mesh2&&) noexcept = default;
-	Mesh2& operator=(Mesh2&&) noexcept = default;
+	Mesh(Mesh&&) noexcept = default;
+	Mesh& operator=(Mesh&&) noexcept = default;
 
-	Mesh2(const Mesh2&) = delete;
-	Mesh2& operator=(const Mesh2&) = delete;
+	Mesh(const Mesh&) = delete;
+	Mesh& operator=(const Mesh&) = delete;
 
-	Mesh2(std::vector<VertexType> vertices, std::vector<uint32_t> indices, std::vector<SubMesh2> subMesh2es);
-	~Mesh2() = default;
+	~Mesh() = default;
+
+
+	// main constructor
+	Mesh(std::vector<VertexType> vertices, std::vector<uint32_t> indices, std::vector<SubMesh> subMeshes);
 	
+
 	const VertexArray&           GetVertexArray()  const noexcept { return *m_VertexArray; }
-	const std::vector<SubMesh2>& GetSubMesh2es()   const noexcept { return  m_SubMeshes;   }
+	const std::vector<SubMesh>& GetSubMeshes()   const noexcept { return  m_SubMeshes;   }
 
 
 private:
 	std::unique_ptr<VertexArray> m_VertexArray;
-	std::vector<SubMesh2> m_SubMeshes;
+	std::vector<SubMesh> m_SubMeshes;
 };

@@ -110,18 +110,18 @@ public:
 
 		// init model
 
-		std::vector<SubMesh2> subMeshes = {
+		std::vector<SubMeshData> subMeshes = {
 			 {
-				.indexOffset = 0,
-				.indexCount = 18,
-				.vertexOffset = 0,
-				.materialIndex = 0
+				.IndexOffset = 0,
+				.IndexCount = 18,
+				.VertexOffset = 0,
+				.MaterialIndex = 0
 			},
 			{
-				.indexOffset = 18,
-				.indexCount = 18,
-				.vertexOffset = 0,
-				.materialIndex = 1
+				.IndexOffset = 18,
+				.IndexCount = 18,
+				.VertexOffset = 0,
+				.MaterialIndex = 1
 			}
 		};
 		
@@ -131,29 +131,54 @@ public:
 		ModelData data;
 
 		// mesh
-		ModelData::MeshData meshData = {
+		MeshData meshData = {
 			.Vertices = std::move(vertices),
 			.Indices = std::move(indices),
 			.SubMeshes = std::move(subMeshes)
 		};
 		data.Meshes.emplace_back(std::move(meshData));
 
+		TextureData texture;
+		texture.Data = FileTextureData
+		{ 
+			.Path = "Resources/textures/guc.png"
+		};
+
+
+		data.Textures.emplace_back(TextureData {
+				.Data = FileTextureData {
+					.Path = "Resources/textures/guc.png"
+				}
+		});
+
+		data.Textures.emplace_back(TextureData{
+				.Data = FileTextureData {
+					.Path = "Resources/textures/image.JPEG"
+				}
+		});
+
+
+
 		// material
-		auto material = std::make_shared<Material>();
-		material->BaseColor = glm::vec4(1.0f);
-		material->SpecularColor = glm::vec3(1.0f);
-		material->Shininess = 400.0f;
-		material->BaseColorTexture = std::make_shared<Texture>("Resources/textures/guc.png");	
+		MaterialData materialData1
+		{
+			.BaseColor = glm::vec4(1.0f),
+			.SpecularColor = glm::vec3(1.0f),
+			.Shininess = 400.0f,
+			.BaseColorTextureIndex = 0
+		};
 
-		// material1
-		auto material1 = std::make_shared<Material>();
-		material1->BaseColor = glm::vec4(1.0f);
-		material1->SpecularColor = glm::vec3(1.0f);
-		material1->Shininess = 400.0f;
-		material1->BaseColorTexture = std::make_shared<Texture>("Resources/textures/image.JPEG");
+		MaterialData materialData2
+		{
+			.BaseColor = glm::vec4(1.0f),
+			.SpecularColor = glm::vec3(1.0f),
+			.Shininess = 400.0f,
+			.BaseColorTextureIndex = 1
+		};
+		
 
-		data.Materials.emplace_back(material);
-		data.Materials.emplace_back(material1);
+		data.Materials.emplace_back(materialData1);
+		data.Materials.emplace_back(materialData2);
 
 		m_Model = std::make_shared<Model>(std::move(data));
 

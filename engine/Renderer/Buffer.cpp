@@ -4,24 +4,47 @@
 
 
 
+// VertexBuffer
 VertexBuffer::VertexBuffer(const void* data, uint32_t size)
 {
-	glCreateBuffers(1, &m_VBO);
-	glNamedBufferStorage(m_VBO, size, data, 0);
+	glCreateBuffers(1, &m_ID);
+	glNamedBufferStorage(m_ID, size, data, 0);
 }
 
-// VertexBuffer
+
+
 VertexBuffer::VertexBuffer(const void* data, uint32_t size, const VertexBufferLayout& layout)
 	: m_Layout(layout)
 {
-	glCreateBuffers(1, &m_VBO);
-	glNamedBufferStorage(m_VBO, size, data, 0);
+	glCreateBuffers(1, &m_ID);
+	glNamedBufferStorage(m_ID, size, data, 0);
 }
 
-VertexBuffer::~VertexBuffer()
+
+
+VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
+	: m_ID(std::exchange(other.m_ID, 0)), m_Layout(std::move(other.m_Layout))
 {
-	glDeleteBuffers(1, &m_VBO);
+	other.m_Layout.Clear();
 }
+
+
+
+VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept
+{
+	if (this == &other)
+		return *this;
+
+	Release();
+	m_ID = std::exchange(other.m_ID, 0);
+	m_Layout = std::move(other.m_Layout);
+
+	other.m_Layout.Clear();
+	
+	return *this;
+}
+
+
 
 void VertexBuffer::SetLayout(const std::initializer_list<VertexAttribute>& vertexElements)
 {
@@ -29,6 +52,23 @@ void VertexBuffer::SetLayout(const std::initializer_list<VertexAttribute>& verte
 	m_Layout = layout;
 }
 	
+void VertexBuffer::Release()
+{
+	if (m_ID != 0)
+	{
+		glDeleteBuffers(1, &m_ID);
+		m_ID = 0;
+	}
+
+	m_Layout.Clear();
+	
+
+}
+
+VertexBuffer::~VertexBuffer()
+{
+	Release();
+}
 
 
 
@@ -36,15 +76,39 @@ void VertexBuffer::SetLayout(const std::initializer_list<VertexAttribute>& verte
 // IndexBuffer
 IndexBuffer::IndexBuffer(std::span<uint32_t> indexBuffer)
 {
-	glCreateBuffers(1, &m_IBO);
-	glNamedBufferStorage(m_IBO, indexBuffer.size_bytes(), indexBuffer.data(), 0);
+	glCreateBuffers(1, &m_ID);
+	glNamedBufferStorage(m_ID, indexBuffer.size_bytes(), indexBuffer.data(), 0);
+}
+
+IndexBuffer::IndexBuffer(IndexBuffer&& other) noexcept
+	: m_ID(std::exchange(other.m_ID, 0))
+{}
+
+IndexBuffer& IndexBuffer::operator=(IndexBuffer && other) noexcept
+{
+	if (this == &other)
+		return *this;
+
+	Release();
+	m_ID = std::exchange(other.m_ID, 0);
+	return *this;
+}
+
+
+
+void IndexBuffer::Release()
+{
+	if (m_ID != 0)
+	{
+		glDeleteBuffers(1, &m_ID);
+		m_ID = 0;
+	}
 }
 
 IndexBuffer::~IndexBuffer()
 {
-	glDeleteBuffers(1, &m_IBO);
+	Release();
 }
-
 
 
 

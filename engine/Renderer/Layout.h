@@ -75,6 +75,8 @@ public:
 	const std::vector<BufferElement>& GetElements() const { return m_BufferElements; }
 	uint32_t GetStride() const { return m_Stride; }
 
+	void Clear();
+
 	static uint32_t ShaderDataTypeToOpenGLBaseType(ShaderDataType type);
 	static uint32_t GetShaderDataTypeSize(ShaderDataType type);
 

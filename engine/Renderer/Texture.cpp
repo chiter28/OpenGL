@@ -3,6 +3,42 @@
 #include <glad/glad.h>
 
 
+
+Texture::Texture(Texture&& other) noexcept
+	: m_ID(std::exchange(other.m_ID, 0))
+{}
+
+Texture& Texture::operator=(Texture&& other) noexcept
+{
+	if (this == &other)
+		return *this;
+	Release();
+	m_ID = std::exchange(other.m_ID, 0);
+	return *this;
+}
+
+Texture::~Texture()
+{
+	Release();
+}
+
+void Texture::Release()
+{
+	if (m_ID != 0)
+	{
+		glDeleteTextures(1, &m_ID);
+		m_ID = 0;
+	}
+}
+
+
+void Texture::Bind(uint32_t slot) const
+{
+	glBindTextureUnit(slot, m_ID);
+}
+
+
+// указатель на поток сжатых байт (например, файл PNG/JPG, загруженный в оперативную память)
 Texture::Texture(const uint8_t* buffer, uint32_t length)
 {
 	int32_t width, height, channels;
@@ -35,7 +71,9 @@ Texture::Texture(const uint8_t* buffer, uint32_t length)
 
 }
 
-Texture::Texture(const void* data, uint32_t width, uint32_t height)
+
+// копирует готовый массив пикселей в GPU
+Texture::Texture(const uint8_t* data, uint32_t width, uint32_t height)
 {
 	
 	GLenum internalFormat_GPU = GL_RGBA8;  // как хранить на GPU
@@ -52,7 +90,7 @@ Texture::Texture(const void* data, uint32_t width, uint32_t height)
 	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 
-	glTextureSubImage2D(m_ID, 0, 0, 0, width, height, dataFormat_CPU, GL_UNSIGNED_BYTE, data);
+	glTextureSubImage2D(m_ID, 0, 0, 0, width, height, dataFormat_CPU, GL_UNSIGNED_BYTE, (const void*)data);
 }
 
 
@@ -88,13 +126,3 @@ Texture::Texture(const std::string& path)
 	stbi_image_free(imageData);
 }
 
-Texture::~Texture()
-{
-	if (m_ID != 0)
-		glDeleteTextures(1, &m_ID);
-}
-
-void Texture::Bind(uint32_t slot) const
-{
-	glBindTextureUnit(slot, m_ID);
-}
