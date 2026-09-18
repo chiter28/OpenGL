@@ -172,7 +172,7 @@ public:
 			.BaseColor = glm::vec4(1.0f, 0.3f, 0.5f, 1.0f),
 			.SpecularColor = glm::vec3(1.0f),
 			.Shininess = 40.0f,
-			.BaseColorTextureIndex = 1
+			.BaseColorTextureIndex = MaterialData::InvalidTextureIndex
 		};
 		
 

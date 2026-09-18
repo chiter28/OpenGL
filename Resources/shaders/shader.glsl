@@ -66,6 +66,7 @@ uniform sampler2D u_AlbedoMap;
 
 uniform Light u_Light;
 uniform Material u_Material;
+uniform bool u_Has_AlbedoMap;
  
 void main()
 {
@@ -76,7 +77,7 @@ void main()
 
 	float diffuseFactor = max(dot(normalize(Normal), u_Light.Direction), 0.0);
 
-	if (diffuseFactor > 0)
+	if (diffuseFactor > 0.00001)
 	{
 		diffuseLight = u_Light.Color * diffuseFactor * u_Light.DiffuseIntensity;
 
@@ -90,8 +91,13 @@ void main()
 	}
 
 
+	vec4 baseColor = u_Material.BaseColorFactor;
 
-	vec4 baseColor = texture(u_AlbedoMap, TexCoord) * u_Material.BaseColorFactor;
+	if (u_Has_AlbedoMap)
+	{
+		 baseColor *= texture(u_AlbedoMap, TexCoord); 
+	}
+
 	vec3 color = baseColor.rgb * (ambientLight + diffuseLight) + specularLight; 
 
 	FragColor = vec4(color, baseColor.a);

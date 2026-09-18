@@ -113,7 +113,7 @@ Texture::Texture(const std::string& path)
 		return;
 	}
 
-	GLenum internalFormat_GPU = GL_RGBA8;  // как хранить на GPU
+	GLenum internalFormat_GPU = GL_SRGB8_ALPHA8;  // как хранить на GPU
 	GLenum dataFormat_CPU = GL_RGBA;     // как лежат данные в CPU
 
 	glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);

@@ -1,6 +1,8 @@
 #include "Model.h"
 
 #include <utility> // std::move
+#include "Renderer/Materials/Material.h"
+
 
 namespace
 {

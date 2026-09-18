@@ -5,6 +5,7 @@
 #include "Models/Model.h"
 #include "Scene/Camera.h"
 #include "Resources/Shader.h"
+#include "Materials/Material.h"
 
 
 
@@ -89,10 +90,15 @@ void Renderer3D::RenderPass(bool transparentPass)
 				s_Shader->SetFloat("u_Material.Shininess", material->Shininess);
 
 
-				if (material->BaseColorTexture) {
+
+				s_Shader->SetInt("u_Has_AlbedoMap", material->BaseColorTexture ? 1 : 0);
+				if (material->BaseColorTexture)
+				{
 					material->BaseColorTexture->Bind(0);
 					s_Shader->SetInt("u_AlbedoMap", 0);
 				}
+
+
 
 				glDrawElementsBaseVertex(GL_TRIANGLES,
 					subMesh.IndexCount,

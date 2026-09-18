@@ -3,11 +3,12 @@
 #include <memory>
 #include <vector>
 
-#include "Renderer/Geometry/Mesh2.h"
-#include "Renderer/Materials/Material2.h"
+#include "Renderer/Geometry/Mesh.h"
 
 #include "ModelData.h"
 
+
+class Material;
 
 
 class Model

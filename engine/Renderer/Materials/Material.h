@@ -1,52 +1,32 @@
-//#pragma once
-//
-//#include <string>
-//#include <memory>
-//#include <unordered_map>
-//
-//#include <glm/glm.hpp>
-//
-//
-//class Shader;
-//class Texture;
-//
-//
-//class Material
-//{
-//public:
-//	Material(std::shared_ptr<Shader> shader = nullptr);
-//	~Material() = default;
-//
-//	void Bind();
-//
-//	void SetFloat(const std::string& name, float value);
-//	void SetInt(const std::string& name, int value);
-//	void SetVec3(const std::string& name, glm::vec3 value);
-//	void SetVec4(const std::string& name, glm::vec4 value);
-//	void SetMat4(const std::string& name, glm::mat4 value);
-//
-//	void SetTexture(const std::string& name, std::shared_ptr<Texture> texture, uint32_t slot = 0);
-//	void SetTransparent(bool transparent) { m_IsTransparent = transparent; }
-//
-//	bool IsTransparent() const { return m_IsTransparent; }
-//
-//	std::shared_ptr<Shader>& GetShader() { return m_Shader; }
-//
-//private:
-//	struct TextureBinding
-//	{
-//		std::shared_ptr<Texture> texture;
-//		uint32_t slot;
-//	};
-//
-//private:
-//	std::shared_ptr<Shader> m_Shader = nullptr;
-//	// Shader Uniforms
-//	std::unordered_map<std::string, float> m_Floats;
-//	std::unordered_map<std::string, int> m_Ints;
-//	std::unordered_map<std::string, glm::vec3> m_Vec3s;
-//	std::unordered_map<std::string, glm::vec4> m_Vec4s;
-//	std::unordered_map<std::string, glm::mat4> m_Mat4s;
-//	std::unordered_map<std::string, TextureBinding> m_Textures;
-//	bool m_IsTransparent = false;
-//};
+#pragma once
+
+#include <memory>
+
+#include <glm/glm.hpp>
+
+#include "Renderer/Resources/Texture.h"
+
+
+class Material
+{
+public:
+	glm::vec4 BaseColor{ 1.0f };
+
+	float Metallic = 0.0f;
+	float Roughness = 1.0f;
+
+	glm::vec3 Emissive{ 0.0f };
+
+	// Temporary Blinn-Phong parameters while the current shader is used.
+	glm::vec3 SpecularColor{ 1.0f };
+	float Shininess = 400.0f;
+
+	std::shared_ptr<Texture> BaseColorTexture;
+	std::shared_ptr<Texture> NormalTexture;
+	std::shared_ptr<Texture> MetallicRoughnessTexture;
+	std::shared_ptr<Texture> OcclusionTexture;
+	std::shared_ptr<Texture> EmissiveTexture;
+
+	bool Transparent = false;
+
+};
