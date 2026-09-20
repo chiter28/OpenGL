@@ -14,8 +14,7 @@ void DirectionalLight::Bind(Shader& shader) const
 {
 	BaseLight::Bind(shader);
 	shader.SetVec3("u_Light.Direction", -m_ViewDirection);
-	shader.SetFloat("u_Light.DiffuseIntensity", m_DiffuseIntensity);
-	shader.SetFloat("u_Light.SpecularIntensity", m_SpecularIntensity);
+	shader.SetFloat("u_Light.Intensity", m_Intensity);
 }
 
 void DirectionalLight::CalculateViewDir(const glm::mat4& view)

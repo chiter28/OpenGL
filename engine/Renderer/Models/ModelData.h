@@ -7,6 +7,7 @@
 
 #include "Renderer/Resources/Layout.h"
 #include "Renderer/Geometry/MeshTypes.h"
+#include "Renderer/Resources/TextureTypes.h"
 
 
 // ---------------------------
@@ -35,6 +36,7 @@ using Source = std::variant<FileTextureData, EncodedTextureData, RawTextureData>
 struct TextureData
 {
 	Source Data;
+	TextureColorSpace ColorSpace = TextureColorSpace::Linear;
 };
 
 
@@ -65,7 +67,6 @@ struct MaterialData//
 	uint32_t EmissiveTextureIndex = InvalidTextureIndex;
 
 	bool Transparent = false;
-
 };
 
 
@@ -80,6 +81,8 @@ struct MeshData
 	std::vector<uint32_t> Indices;
 	std::vector<SubMesh> SubMeshes;
 };
+
+
 
 
 

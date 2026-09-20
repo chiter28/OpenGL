@@ -281,6 +281,16 @@ void Shader::SetMat4(const std::string& name, const glm::mat4& mat4)
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat4));
 }
 
+void Shader::SetMat3(const std::string& name, const glm::mat3& mat3)
+{
+	int location = GetUniformLocation(name);
+	if (location == -1) {
+		std::cerr << "Error: uniform " << name << " not found" << std::endl;
+		return;
+	}
+	glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(mat3));
+}
+
 
 
 

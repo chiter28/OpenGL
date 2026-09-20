@@ -9,7 +9,7 @@ namespace
 	std::shared_ptr<Texture> CreateTexture(const TextureData& textureData)
 	{
 		return std::visit(
-			[](const auto& source) -> std::shared_ptr<Texture> // source - FileTextureData, EncodedTextureData, RawTextureData
+			[colorSpace = textureData.ColorSpace](const auto& source) -> std::shared_ptr<Texture> // source - FileTextureData, EncodedTextureData, RawTextureData
 			{
 				// type? (FileTextureData, EncodedTextureData, RawTextureData)
 				using SourceType = std::decay_t<decltype(source)>;
@@ -19,7 +19,7 @@ namespace
 					// std::filesystem::path Path;
 					if (!std::filesystem::exists(source.Path))
 						return nullptr;
-					return std::make_shared<Texture>(source.Path.string());
+					return std::make_shared<Texture>(source.Path.string(), colorSpace);
 				}
 
 				else if constexpr (std::is_same_v<SourceType, EncodedTextureData>)
@@ -27,7 +27,7 @@ namespace
 					// std::vector<uint8_t> Bytes;
 					if (source.Bytes.empty())
 						return nullptr;
-					return std::make_shared<Texture>(source.Bytes.data(), static_cast<uint32_t>(source.Bytes.size()));
+					return std::make_shared<Texture>(source.Bytes.data(), static_cast<uint32_t>(source.Bytes.size()), colorSpace);
 				}
 
 				else if constexpr (std::is_same_v<SourceType, RawTextureData>)
@@ -38,7 +38,7 @@ namespace
 					const uint32_t expectedSize = source.Width * source.Height * 4;
 					if (source.Width == 0 || source.Height == 0 || source.Pixels.size() < expectedSize)
 						return nullptr;
-					return std::make_shared<Texture>(source.Pixels.data(), source.Width, source.Height);
+					return std::make_shared<Texture>(source.Pixels.data(), source.Width, source.Height, colorSpace);
 				}
 
 			}, textureData.Data);

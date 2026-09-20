@@ -21,10 +21,12 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return;
     }
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    
+    glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
 
     m_Window = glfwCreateWindow(m_Width, m_Height, name, nullptr, nullptr);
@@ -40,6 +42,9 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
         std::cerr << "Failed to init GLAD" << std::endl;
         return;
     }
+
+   
+
 
     int displayWidth, displayHeight;
     glfwGetFramebufferSize(m_Window, &displayWidth, &displayHeight);

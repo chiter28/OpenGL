@@ -26,7 +26,7 @@ App::App()
 void App::Run()
 {
 	glEnable(GL_DEPTH_TEST);
-	
+	glEnable(GL_FRAMEBUFFER_SRGB);
 	//glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CCW);
 	//glCullFace(GL_BACK);
@@ -47,7 +47,7 @@ void App::Run()
 
 
 		if (!m_Minimized) {
-			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 			m_CurrentSandbox->OnRender(*m_Camera);

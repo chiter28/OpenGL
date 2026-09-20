@@ -29,6 +29,8 @@ public:
 	void SetVec3(const std::string& name, glm::vec3 vec3);
 	void SetVec4(const std::string& name, glm::vec4 vec4);
 	void SetMat4(const std::string& name, const glm::mat4& mat4);
+	void SetMat3(const std::string& name, const glm::mat3& mat3);
+
 
 private:
 	std::string ReadFile(const std::string& filePath);

@@ -79,6 +79,11 @@ void Renderer3D::RenderPass(bool transparentPass)
 					s_Shader->SetMat4("u_View", s_SceneData.ViewMatrix);
 					s_Shader->SetMat4("u_Projection", s_SceneData.ProjectionMatrix);
 					s_SceneData.Light.Bind(*s_Shader);
+
+					
+					glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm:: mat3(s_SceneData.ViewMatrix * command.Transform)));
+					s_Shader->SetMat3("u_NormalMatrix", normalMatrix);
+
 					lastBoundShader = s_Shader.get();
 				}
 
@@ -88,7 +93,8 @@ void Renderer3D::RenderPass(bool transparentPass)
 				s_Shader->SetVec4("u_Material.BaseColorFactor", material->BaseColor);
 				s_Shader->SetVec3("u_Material.SpecularColor", material->SpecularColor);
 				s_Shader->SetFloat("u_Material.Shininess", material->Shininess);
-
+				s_Shader->SetFloat("u_Material.Metallic", material->Metallic);
+				s_Shader->SetFloat("u_Material.Roughness", material->Roughness);
 
 
 				s_Shader->SetInt("u_Has_AlbedoMap", material->BaseColorTexture ? 1 : 0);

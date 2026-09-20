@@ -43,7 +43,7 @@ void Texture::Bind(uint32_t slot) const
 
 
 // указатель на поток сжатых байт (например, файл PNG/JPG, загруженный в оперативную память)
-Texture::Texture(const uint8_t* buffer, uint32_t length)
+Texture::Texture(const uint8_t* buffer, uint32_t length, TextureColorSpace colorSpace)
 {
 	int32_t width, height, channels;
 	stbi_set_flip_vertically_on_load(true);
@@ -55,8 +55,9 @@ Texture::Texture(const uint8_t* buffer, uint32_t length)
 		return;
 	}
 
-	GLenum internalFormat_GPU = GL_RGBA8;  // как хранить на GPU
-	GLenum dataFormat_CPU = GL_RGBA;     // как лежат данные в CPU
+	const GLenum internalFormat_GPU =
+		(colorSpace == TextureColorSpace::sRGB) ? GL_SRGB8_ALPHA8 : GL_RGBA8;  // как хранить на GPU
+	const GLenum dataFormat_CPU = GL_RGBA;     // как лежат данные в CPU
 
 	glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);
 	glTextureStorage2D(m_ID, 1, internalFormat_GPU, width, height);
@@ -77,11 +78,12 @@ Texture::Texture(const uint8_t* buffer, uint32_t length)
 
 
 // копирует готовый массив пикселей в GPU
-Texture::Texture(const uint8_t* data, uint32_t width, uint32_t height)
+Texture::Texture(const uint8_t* data, uint32_t width, uint32_t height, TextureColorSpace colorSpace)
 {
 	
-	GLenum internalFormat_GPU = GL_RGBA8;  // как хранить на GPU
-	GLenum dataFormat_CPU = GL_RGBA;     // как лежат данные в CPU
+	const GLenum internalFormat_GPU =
+		(colorSpace == TextureColorSpace::sRGB) ? GL_SRGB8_ALPHA8 : GL_RGBA8;  // как хранить на GPU
+	const GLenum dataFormat_CPU = GL_RGBA;     // как лежат данные в CPU
 
 	glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);
 	glTextureStorage2D(m_ID, 1, internalFormat_GPU, width, height);
@@ -100,7 +102,7 @@ Texture::Texture(const uint8_t* data, uint32_t width, uint32_t height)
 
 
 
-Texture::Texture(const std::string& path)
+Texture::Texture(const std::string& path, TextureColorSpace colorSpace)
 {
 	stbi_set_flip_vertically_on_load(true);
 
@@ -113,8 +115,12 @@ Texture::Texture(const std::string& path)
 		return;
 	}
 
-	GLenum internalFormat_GPU = GL_SRGB8_ALPHA8;  // как хранить на GPU
-	GLenum dataFormat_CPU = GL_RGBA;     // как лежат данные в CPU
+	const GLenum internalFormat_GPU =
+		(colorSpace == TextureColorSpace::sRGB) ? GL_SRGB8_ALPHA8 : GL_RGBA8;  // как хранить на GPU
+	const GLenum dataFormat_CPU = GL_RGBA;     // как лежат данные в CPU 
+
+
+
 
 	glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);
 	glTextureStorage2D(m_ID, 1, internalFormat_GPU, width, height); // allocate memoty on GPU
@@ -129,4 +135,3 @@ Texture::Texture(const std::string& path)
 
 	stbi_image_free(imageData);
 }
-
