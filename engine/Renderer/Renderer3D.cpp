@@ -81,6 +81,7 @@ void Renderer3D::RenderPass(bool transparentPass)
 					s_SceneData.Light.Bind(*s_Shader);
 
 					
+
 					glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm:: mat3(s_SceneData.ViewMatrix * command.Transform)));
 					s_Shader->SetMat3("u_NormalMatrix", normalMatrix);
 

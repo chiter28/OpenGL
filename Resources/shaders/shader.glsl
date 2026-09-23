@@ -34,6 +34,9 @@ void main()
 
 
 
+
+
+
 #type fragment
 #version 450 core
 
@@ -67,28 +70,67 @@ uniform Light u_Light;
 uniform Material u_Material;
 uniform bool u_Has_AlbedoMap;
  
+
+
+
+vec3 FresnelSchlick(float cosTheta, vec3 F0)
+{
+	float t = 1.0 - clamp(cosTheta, 0.0, 1.0);
+	float weight = pow(t, 5.0);
+	
+	return F0 + (vec3(1.0) - F0) * weight;
+}
+
+
+float DistributionGGX(vec3 N, vec3 H, float roughness)
+{
+	const float PI = 3.14159265359;
+	
+	// Roughness
+	float r = clamp(roughness, 0.05, 1.0);
+	float alpha = r * r;
+	float alphaSquare = alpha * alpha;
+
+	// Angle between N ^ H
+	float NdotH = clamp(dot(N, H), 0.0, 1.0);
+	float NdotHSquare = NdotH * NdotH;
+
+	float denominator = mix(1.0, alphaSquare, NdotHSquare);
+	return alphaSquare / (PI * pow(denominator, 2.0));
+	
+	// mix(a, b, t) = a * (1.0 - t) + b * t;
+	// cos²(90)(|_) = 0			-> 1
+	// cos²(75)(|/) = 0.067 	-> 1 * 0.93 + alphaSquare * 0.067  
+	// cos²(60)(|/) = 0.25      -> 1 * 0.75 + alphaSquare * 0.25
+	// cos²(30)(|/) = 0.75		-> 1 * 0.25 + alphaSquare * 0.75
+	// cos²(0)(||) = 1			-> alphaSquare
+}
+
+
+float GeometrySmithG1GGX(float NdotV, float roughness)
+{
+	// Roughness
+	float r = clamp(roughness, 0.05, 1.0);
+	float alpha = r * r;
+	float alphaSquare = alpha * alpha;
+
+	float c = clamp(NdotV, 0.0, 1.0);
+	float cSquare = c * c;
+
+	float rootArg = mix(alphaSquare, 1.0, cSquare); 
+	return (2.0 * c) / (c + sqrt(rootArg)); // от 0 до 1
+		
+	// mix(a, b, t) = a * (1.0 - t) + b * t;
+	// cos²(90)(|_) = 0			-> alphaSquare
+	// cos²(75)(|/) = 0.067		-> alphaSquare * 0.93 + 0.067  
+	// cos²(60)(|/) = 0.25      -> alphaSquare * 0.75 + 0.25
+	// cos²(30)(|/) = 0.75		-> alphaSquare * 0.25 + 0.75
+	// cos²(0)(||) = 1			-> 1
+}
+
+
 void main()
 {
-
-	vec3 ambientLight = u_Light.Color * u_Light.AmbientIntensity;
-	vec3 diffuseLight =  vec3(0.0, 0.0, 0.0);
-	vec3 specularLight = vec3(0.0, 0.0, 0.0);
-
-	float diffuseFactor = max(dot(normalize(Normal), u_Light.Direction), 0.0); // cos(l)
-
-	if (diffuseFactor > 0.00001)
-	{
-		diffuseLight = u_Light.Color * diffuseFactor * u_Light.Intensity;
-
-		vec3 viewDir = normalize(-FragPos);
-		vec3 halfwayDir = normalize(u_Light.Direction + viewDir);
-		float specularFactor = pow(max(dot(normalize(Normal), halfwayDir), 0.0), u_Material.Shininess);
-		if (specularFactor > 0.0)
-		{
-			specularLight = u_Light.Color * specularFactor * u_Light.Intensity * u_Material.SpecularColor;
-		}
-	}
-
 
 	vec4 baseColor = u_Material.BaseColorFactor;
 
@@ -97,7 +139,62 @@ void main()
 		 baseColor *= texture(u_AlbedoMap, TexCoord); 
 	}
 
+	vec3 F0 = mix(vec3(0.04), baseColor.rgb, u_Material.Metallic);
+	
+
+	vec3 N = normalize(Normal);
+	vec3 L = normalize(u_Light.Direction);
+	vec3 V = normalize(-FragPos);
+
+	vec3 ambientLight = u_Light.Color * u_Light.AmbientIntensity;
+	vec3 diffuseLight =  vec3(0.0, 0.0, 0.0);
+	vec3 specularLight = vec3(0.0, 0.0, 0.0);
+
+	float NdotL = max(dot(N, L), 0.0); // cos(l)
+	float NdotV = max(dot(N, V), 0.0); // cos(l)
+
+	if (NdotL > 0.00001 && NdotV > 0.00001)
+	{
+
+
+		diffuseLight = u_Light.Color * NdotL * u_Light.Intensity;
+		
+
+
+
+		 // Такую нормаль должна иметь микрогрань, чтобы отразить свет от источника к камере
+		vec3 H = normalize(L + V);
+
+		// Доля энергии света, падающего из направления L, которую микрогрань с нормалью - H отразит зеркально в сторону V
+		vec3 F = FresnelSchlick(dot(H, V), F0);
+
+		// Плотность распределения микрограней имеющих нормали H
+		float D = DistributionGGX(N, H, u_Material.Roughness);
+
+		// Коэффициент перекрития луча от поверхности к камере из-за перекрития выпуклостями микрограней
+		// G1 = 1 - не перекривает // G1 = 0 - полностью перекривает
+		float G1V = GeometrySmithG1GGX(NdotV, u_Material.Roughness);
+		// Коэффициент перекрития луча от источника к поверхности из-за перекрития выпуклостями микрограней
+		float G1L = GeometrySmithG1GGX(NdotL, u_Material.Roughness);
+		// Разделимая модель Смита: учитываем перекрытие в обоих направлениях.
+		float G = G1V * G1L;
+
+		vec3 specularBRDF = (D * F * G) / (4 * NdotL * NdotV);
+
+		vec3 lightIrradiance = u_Light.Color * u_Light.Intensity;
+
+		specularLight = specularBRDF * lightIrradiance * NdotL;
+
+	}
+
+
+	
+
 	vec3 color = baseColor.rgb * (ambientLight + diffuseLight) + specularLight; 
 
 	FragColor = vec4(color, baseColor.a);
 }
+
+
+
+	
