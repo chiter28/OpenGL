@@ -24,7 +24,7 @@ namespace
 
 				else if constexpr (std::is_same_v<SourceType, EncodedTextureData>)
 				{
-					// std::vector<uint8_t> Bytes;
+					// std::vector<std::byte> Bytes;
 					if (source.Bytes.empty())
 						return nullptr;
 					return std::make_shared<Texture>(source.Bytes.data(), static_cast<uint32_t>(source.Bytes.size()), colorSpace);
@@ -45,6 +45,8 @@ namespace
 	}
 }
 
+
+
 Model::Model(ModelData data)
 {
 	ValidateModelData(data);
@@ -64,7 +66,7 @@ Model::Model(ModelData data)
 
 
 
-
+	// Textures
 	std::vector<std::shared_ptr<Texture>> textures;
 	textures.reserve(data.Textures.size());
 
@@ -97,10 +99,6 @@ Model::Model(ModelData data)
 		material->Emissive = materialData.Emissive;
 
 
-		// Temporary Blinn-Phong parameters while the current shader is used.
-		material->SpecularColor = materialData.SpecularColor;
-		material->Shininess = materialData.Shininess;
-
 		material->BaseColorTexture = resolveTexture(materialData.BaseColorTextureIndex);
 		material->NormalTexture = resolveTexture(materialData.NormalTextureIndex);;
 		material->MetallicRoughnessTexture = resolveTexture(materialData.MetallicRoughnessTextureIndex);;
@@ -111,7 +109,6 @@ Model::Model(ModelData data)
 
 		m_Materials.emplace_back(std::move(material));
 	}
-
 }
 
 

@@ -9,7 +9,7 @@ class App
 {
 public:
 	App();
-	~App() = default;
+	~App();
 
 	void Run();
 	static App& Get() { return *s_Instance; }

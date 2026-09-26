@@ -38,7 +38,6 @@ VertexArray::VertexArray(const std::shared_ptr<VertexBuffer>& vertexBuffer, cons
 VertexArray::VertexArray(VertexArray&& other) noexcept
 	: m_ID(std::exchange(other.m_ID, 0)),
 	  m_VertexBuffers(std::move(other.m_VertexBuffers)),
-	  m_MultiVertexBuffer(std::move(other.m_MultiVertexBuffer)),
 	  m_IndexBuffer(std::move(other.m_IndexBuffer)),
 	  m_VertexBindingIndex(std::exchange(other.m_VertexBindingIndex, 0))
 {}
@@ -52,7 +51,6 @@ VertexArray& VertexArray::operator=(VertexArray && other) noexcept
 
 	m_ID = std::exchange(other.m_ID, 0);
 	m_VertexBuffers = std::move(other.m_VertexBuffers);
-	m_MultiVertexBuffer = std::move(other.m_MultiVertexBuffer);
 	m_IndexBuffer = std::move(other.m_IndexBuffer);
 	m_VertexBindingIndex = std::exchange(other.m_VertexBindingIndex, 0);
 
@@ -72,7 +70,6 @@ void VertexArray::Release()
 		m_ID = 0;
 	}
 	m_VertexBuffers.clear();
-	m_MultiVertexBuffer = nullptr;
 	m_IndexBuffer = nullptr;
 	m_VertexBindingIndex = 0;
 }
@@ -82,34 +79,6 @@ void VertexArray::Bind() const
 	glBindVertexArray(m_ID);
 }
 
-void VertexArray::AddMultiVertexBuffer(BufferType type, const std::shared_ptr<MultiVertexBuffer>& multiVertexBuffer)
-{
-	glVertexArrayVertexBuffer(m_ID, m_VertexBindingIndex, multiVertexBuffer->GetID(type), 0, multiVertexBuffer->GetLayout(type).GetStride());
-
-	for (const VertexBufferLayout::BufferElement& element : multiVertexBuffer->GetLayout(type).GetElements())
-	{
-		uint32_t attributeLocation = GetAttributeLocation(element.Attribute);
-
-		glEnableVertexArrayAttrib(m_ID, attributeLocation);
-		glVertexArrayAttribFormat(
-			m_ID,
-			attributeLocation,
-			element.GetComponentCount(),
-			VertexBufferLayout::ShaderDataTypeToOpenGLBaseType(element.Type),
-			element.Normalized,
-			element.Offset
-		);
-
-		glVertexArrayAttribBinding(m_ID, attributeLocation, m_VertexBindingIndex);
-	}
-
-	if (m_MultiVertexBuffer != multiVertexBuffer)
-	{
-		m_MultiVertexBuffer = multiVertexBuffer;
-	}
-
-	m_VertexBindingIndex++;
-}
 
 
 void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t divisor)

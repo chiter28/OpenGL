@@ -10,7 +10,7 @@ public:
 	BaseLight() = default;
 
 	glm::vec3 m_Color = { 1.0f, 1.0f, 1.0f };
-	float m_AmbientIntensity = 0.1f;
+	float m_AmbientIntensity = 0.01f;
 
 	virtual void Bind(Shader& shader) const;
 };

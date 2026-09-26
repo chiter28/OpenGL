@@ -8,7 +8,7 @@
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 
-
+#include "Renderer/Renderer3D.h"
 
 
 
@@ -18,6 +18,18 @@ App::App()
 	s_Instance = this;
 	m_Window = std::make_unique<Window>(1280, 720, "App", m_EventQueue);
 	m_Camera = std::make_unique<Camera>();
+
+	Renderer3D::Init();
+}
+
+App::~App()
+{
+	if (m_CurrentSandbox)
+	{
+		m_CurrentSandbox->OnDetach();
+		m_CurrentSandbox.reset();
+	}
+	Renderer3D::Shutdown();
 }
 
 
@@ -47,7 +59,7 @@ void App::Run()
 
 
 		if (!m_Minimized) {
-			glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+			glClearColor(0.01f, 0.02f, 0.03f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 			m_CurrentSandbox->OnRender(*m_Camera);

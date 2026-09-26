@@ -2,6 +2,7 @@
 
 #include "Buffer.h"
 #include <glad/glad.h>
+#include <stdexcept>
 
 
 // VertexBuffer
@@ -11,24 +12,27 @@ VertexBuffer::VertexBuffer(const void* data, uint32_t size)
 	glNamedBufferStorage(m_ID, size, data, 0);
 }
 
+void VertexBuffer::SetLayout(const std::initializer_list<VertexAttribute>& vertexElements)
+{
+	m_Layout = VertexBufferLayout{ vertexElements };
+}
 
 
-VertexBuffer::VertexBuffer(const void* data, uint32_t size, const VertexBufferLayout& layout)
-	: m_Layout(layout)
+
+
+
+VertexBuffer::VertexBuffer(const void* data, uint32_t size, VertexBufferLayout layout)
+	: m_Layout(std::move(layout))
 {
 	glCreateBuffers(1, &m_ID);
 	glNamedBufferStorage(m_ID, size, data, 0);
 }
-
-
 
 VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
 	: m_ID(std::exchange(other.m_ID, 0)), m_Layout(std::move(other.m_Layout))
 {
 	other.m_Layout.Clear();
 }
-
-
 
 VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept
 {
@@ -45,12 +49,6 @@ VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept
 }
 
 
-
-void VertexBuffer::SetLayout(const std::initializer_list<VertexAttribute>& vertexElements)
-{
-	VertexBufferLayout layout(vertexElements);
-	m_Layout = layout;
-}
 	
 void VertexBuffer::Release()
 {
@@ -61,8 +59,6 @@ void VertexBuffer::Release()
 	}
 
 	m_Layout.Clear();
-	
-
 }
 
 VertexBuffer::~VertexBuffer()
@@ -94,8 +90,6 @@ IndexBuffer& IndexBuffer::operator=(IndexBuffer && other) noexcept
 	return *this;
 }
 
-
-
 void IndexBuffer::Release()
 {
 	if (m_ID != 0)
@@ -113,23 +107,40 @@ IndexBuffer::~IndexBuffer()
 
 
 
-MultiVertexBuffer::MultiVertexBuffer()
+
+// UniformBuffer
+
+UniformBuffer::UniformBuffer(uint32_t size)
+	: m_Size(size)
 {
-	glCreateBuffers(static_cast<size_t>(BufferType::Count), m_Buffers);
+	if (m_Size == 0)
+	{
+		throw std::invalid_argument("UniformBuffer size must be positive");
+	}
+	glCreateBuffers(1, &m_ID);
+	glNamedBufferStorage(m_ID, static_cast<GLsizeiptr>(m_Size), nullptr, GL_DYNAMIC_STORAGE_BIT);
 }
 
-MultiVertexBuffer::~MultiVertexBuffer()
+UniformBuffer::~UniformBuffer()
 {
-	glDeleteBuffers(static_cast<size_t>(BufferType::Count), m_Buffers);
+	if (m_ID != 0)
+	{
+		glDeleteBuffers(1, &m_ID);
+	}
 }
 
-void MultiVertexBuffer::SetData(BufferType type, const void* data, uint32_t size)
+void UniformBuffer::SetData(std::span<const std::byte> data) const
 {
-	glNamedBufferStorage(GetID(type), size, data, 0);
+	if (data.size_bytes() != m_Size)
+	{
+		throw std::invalid_argument("UniformBuffer data size must match buffer size");
+	}
+
+	glNamedBufferSubData(m_ID, 0, data.size_bytes(), data.data());
 }
 
-void MultiVertexBuffer::SetLayout(BufferType type, VertexAttribute vertexAttribute)
+
+void UniformBuffer::Bind(uint32_t bindingPoint) const
 {
-	VertexBufferLayout layout({ vertexAttribute });
-	m_Layouts[static_cast<size_t>(type)] = layout;
+	glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, m_ID);
 }

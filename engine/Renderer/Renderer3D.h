@@ -11,7 +11,7 @@
 
 // internal
 #include "Scene/Light.h"
-
+#include "Materials/MaterialBinder.h"
 
 class Camera;
 class DirectionalLight;
@@ -37,6 +37,7 @@ public:
 
 public:
     static void Init();
+    static void Shutdown();
 
     static void BeginScene(const Camera& camera, const DirectionalLight& light);
     static void EndScene();
@@ -47,6 +48,7 @@ private:
 
 private:
     inline static std::shared_ptr<Shader> s_Shader;
+    inline static std::unique_ptr<MaterialBinder> s_MaterialBinder;
 
     inline static std::vector<RenderCommand> s_DrawQueue;
     inline static SceneData s_SceneData;

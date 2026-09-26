@@ -40,12 +40,17 @@ void main()
 #type fragment
 #version 450 core
 
+// Output variables
 layout (location = 0) out vec4 FragColor;
 
+
+// Input variables
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
 
+
+// Structs
 struct Light
 {
 	vec3 Color;
@@ -54,25 +59,28 @@ struct Light
 	vec3 Direction;
 };
 
-struct Material
+// UBO
+layout(std140) uniform MaterialBlock
 {
-	vec4 BaseColorFactor;
-	vec3 SpecularColor;
-	float Shininess;
-
+	vec4 BaseColor;
 	float Metallic;
 	float Roughness;
-};
+} u_Material;
+
+// Uniforms
+uniform Light u_Light;
+
 
 uniform sampler2D u_AlbedoMap;
-
-uniform Light u_Light;
-uniform Material u_Material;
-uniform bool u_Has_AlbedoMap;
- 
+uniform sampler2D u_MetallicRoughnessMap;
 
 
+// Constants
+const float PI = 3.14159265359;
 
+
+
+// Functions
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
 	float t = 1.0 - clamp(cosTheta, 0.0, 1.0);
@@ -81,11 +89,8 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
 	return F0 + (vec3(1.0) - F0) * weight;
 }
 
-
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
-	const float PI = 3.14159265359;
-	
 	// Roughness
 	float r = clamp(roughness, 0.05, 1.0);
 	float alpha = r * r;
@@ -129,18 +134,23 @@ float GeometrySmithG1GGX(float NdotV, float roughness)
 }
 
 
+
+
+
+
+
 void main()
 {
 
-	vec4 baseColor = u_Material.BaseColorFactor;
+	vec4 baseColor = texture(u_AlbedoMap, TexCoord) * u_Material.BaseColor; 
 
-	if (u_Has_AlbedoMap)
-	{
-		 baseColor *= texture(u_AlbedoMap, TexCoord); 
-	}
-
-	vec3 F0 = mix(vec3(0.04), baseColor.rgb, u_Material.Metallic);
+	vec4 metallic_roughness = texture(u_MetallicRoughnessMap, TexCoord);
+		
+	float metallic = u_Material.Metallic * metallic_roughness.b;
+	float roughness = u_Material.Roughness * metallic_roughness.g;
 	
+
+	vec3 F0 = mix(vec3(0.04), baseColor.rgb, metallic);
 
 	vec3 N = normalize(Normal);
 	vec3 L = normalize(u_Light.Direction);
@@ -156,12 +166,6 @@ void main()
 	if (NdotL > 0.00001 && NdotV > 0.00001)
 	{
 
-
-		diffuseLight = u_Light.Color * NdotL * u_Light.Intensity;
-		
-
-
-
 		 // Такую нормаль должна иметь микрогрань, чтобы отразить свет от источника к камере
 		vec3 H = normalize(L + V);
 
@@ -169,20 +173,25 @@ void main()
 		vec3 F = FresnelSchlick(dot(H, V), F0);
 
 		// Плотность распределения микрограней имеющих нормали H
-		float D = DistributionGGX(N, H, u_Material.Roughness);
+		float D = DistributionGGX(N, H, roughness);
 
 		// Коэффициент перекрития луча от поверхности к камере из-за перекрития выпуклостями микрограней
 		// G1 = 1 - не перекривает // G1 = 0 - полностью перекривает
-		float G1V = GeometrySmithG1GGX(NdotV, u_Material.Roughness);
+		float G1V = GeometrySmithG1GGX(NdotV, roughness);
 		// Коэффициент перекрития луча от источника к поверхности из-за перекрития выпуклостями микрограней
-		float G1L = GeometrySmithG1GGX(NdotL, u_Material.Roughness);
+		float G1L = GeometrySmithG1GGX(NdotL, roughness);
 		// Разделимая модель Смита: учитываем перекрытие в обоих направлениях.
 		float G = G1V * G1L;
 
+		vec3 lightIrradiance = u_Light.Color * u_Light.Intensity;
 		vec3 specularBRDF = (D * F * G) / (4 * NdotL * NdotV);
 
-		vec3 lightIrradiance = u_Light.Color * u_Light.Intensity;
+		// Оставшаяся часть енергии света которая не отразилася от микрограни
+		vec3 diffuseWeight = mix((vec3(1.0) - F), vec3(0.0), metallic); 
+		// mix(a, b, t) = a * (1.0 - t) + b * t;
+		vec3 diffuseBRDF = diffuseWeight * baseColor.rgb / PI;
 
+		diffuseLight = diffuseBRDF * lightIrradiance * NdotL;
 		specularLight = specularBRDF * lightIrradiance * NdotL;
 
 	}
@@ -190,7 +199,7 @@ void main()
 
 	
 
-	vec3 color = baseColor.rgb * (ambientLight + diffuseLight) + specularLight; 
+	vec3 color = baseColor.rgb * ambientLight + diffuseLight + specularLight; 
 
 	FragColor = vec4(color, baseColor.a);
 }

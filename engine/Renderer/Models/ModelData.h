@@ -9,6 +9,7 @@
 #include "Renderer/Geometry/MeshTypes.h"
 #include "Renderer/Resources/TextureTypes.h"
 
+#include <cstddef>
 
 // ---------------------------
 // Texture Data
@@ -21,7 +22,7 @@ struct FileTextureData
 
 struct EncodedTextureData
 {
-	std::vector<uint8_t> Bytes;
+	std::vector<std::byte> Bytes;
 };
 
 struct RawTextureData
@@ -55,10 +56,6 @@ struct MaterialData//
 	float Roughness = 1.0f;
 
 	glm::vec3 Emissive{ 0.0f };
-
-	// Temporary Blinn-Phong parameters while the current shader is used.
-	glm::vec3 SpecularColor{ 1.0f };
-	float Shininess = 400.0f;
 
 	uint32_t BaseColorTextureIndex = InvalidTextureIndex;
 	uint32_t NormalTextureIndex = InvalidTextureIndex;

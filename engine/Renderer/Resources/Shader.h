@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <cstdint>
 
 #include <glm/glm.hpp>
 
@@ -24,6 +25,8 @@ public:
 
 	void Release();
 
+	void SetUniformBlockBinding(const std::string& blockName, uint32_t bindingPoint) const;
+
 	void SetFloat(const std::string& name, float fval);
 	void SetInt(const std::string& name, int ival);
 	void SetVec3(const std::string& name, glm::vec3 vec3);
@@ -31,12 +34,11 @@ public:
 	void SetMat4(const std::string& name, const glm::mat4& mat4);
 	void SetMat3(const std::string& name, const glm::mat3& mat3);
 
-
 private:
 	std::string ReadFile(const std::string& filePath);
 	
 	std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
-	void Compile(std::unordered_map<GLenum, std::string> shaderSources);
+	void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 
 	int GetUniformLocation(const std::string& name) const;
 

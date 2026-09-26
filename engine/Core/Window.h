@@ -12,6 +12,13 @@ public:
 	Window(uint32_t width, uint32_t height, const char* name, EventQueue& eventQueue);
 	~Window();
 
+
+	Window(const Window&) = delete;
+	Window& operator=(const Window&) = delete;
+	Window(Window&&) = delete;
+	Window& operator=(Window&&) = delete;
+
+
 	void PollEvents();
 	void SwapBuffers();
 

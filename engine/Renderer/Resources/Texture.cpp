@@ -41,14 +41,18 @@ void Texture::Bind(uint32_t slot) const
 	glBindTextureUnit(slot, m_ID);
 }
 
+void Texture::Unbind(uint32_t slot)
+{
+	glBindTextureUnit(slot, 0);
+}
 
 // указатель на поток сжатых байт (например, файл PNG/JPG, загруженный в оперативную память)
-Texture::Texture(const uint8_t* buffer, uint32_t length, TextureColorSpace colorSpace)
+Texture::Texture(const std::byte* buffer, uint32_t length, TextureColorSpace colorSpace)
 {
 	int32_t width, height, channels;
 	stbi_set_flip_vertically_on_load(true);
 
-	stbi_uc* imageData = stbi_load_from_memory(buffer, length, &width, &height, &channels, 4);
+	stbi_uc* imageData = stbi_load_from_memory((const stbi_uc*)(buffer), length, &width, &height, &channels, 4);
 	
 	if (!imageData) {
 		std::cerr << "Texture load (from buffer) failed : " << stbi_failure_reason() << std::endl;
@@ -92,8 +96,8 @@ Texture::Texture(const uint8_t* data, uint32_t width, uint32_t height, TextureCo
 	glTextureParameteri(m_ID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTextureParameteri(m_ID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 
 	glTextureSubImage2D(m_ID, 0, 0, 0, width, height, dataFormat_CPU, GL_UNSIGNED_BYTE, (const void*)data);

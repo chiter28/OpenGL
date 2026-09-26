@@ -4,6 +4,7 @@
 #include <iostream>
 #include <array>
 #include <utility>
+#include <stdexcept>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -21,7 +22,7 @@ Shader::Shader(Shader&& other) noexcept
 	  m_UniformLocationCache(std::move(other.m_UniformLocationCache))
 {}
 
-Shader& Shader::operator=(Shader && other) noexcept
+Shader& Shader::operator=(Shader&& other) noexcept
 {
 	if (this == &other)
 		return *this;
@@ -30,6 +31,7 @@ Shader& Shader::operator=(Shader && other) noexcept
 
 	m_Program = std::exchange(other.m_Program, 0);
 	m_UniformLocationCache = std::move(other.m_UniformLocationCache);
+	return *this;
 }
 
 Shader::~Shader()
@@ -57,6 +59,21 @@ void Shader::Release()
 		m_Program = 0;
 	}
 	m_UniformLocationCache.clear();
+}
+
+void Shader::SetUniformBlockBinding(const std::string& blockName, uint32_t bindingPoint) const
+{
+	if (m_Program == 0)
+	{
+		throw std::runtime_error("Shader program is not initialized");
+	}
+
+	const GLuint blockIndex = glGetUniformBlockIndex(m_Program, blockName.c_str());
+	if (blockIndex == GL_INVALID_INDEX)
+	{
+		throw std::runtime_error("Uniform block not found " + blockName);
+	}
+	glUniformBlockBinding(m_Program, blockIndex, bindingPoint);
 }
 
 
@@ -136,7 +153,7 @@ std::unordered_map<GLenum, std::string> Shader::PreProcess(const std::string& so
 	return shaderSource;
 }
 
-void Shader::Compile(std::unordered_map<GLenum, std::string> shaderSources)
+void Shader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 {
 	GLuint program = glCreateProgram();
 	std::array<GLuint, 2> shaderIDs;

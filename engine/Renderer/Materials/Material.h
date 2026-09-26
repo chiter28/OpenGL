@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include <glm/glm.hpp>
-
 #include "Renderer/Resources/Texture.h"
 
 
@@ -17,10 +15,6 @@ public:
 
 	glm::vec3 Emissive{ 0.0f };
 
-	// Temporary Blinn-Phong parameters while the current shader is used.
-	glm::vec3 SpecularColor{ 1.0f };
-	float Shininess = 400.0f;
-
 	std::shared_ptr<Texture> BaseColorTexture;
 	std::shared_ptr<Texture> NormalTexture;
 	std::shared_ptr<Texture> MetallicRoughnessTexture;
@@ -28,5 +22,4 @@ public:
 	std::shared_ptr<Texture> EmissiveTexture;
 
 	bool Transparent = false;
-
 };

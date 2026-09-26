@@ -4,6 +4,7 @@
 #include <vector>
 #include <span>
 #include <memory>
+#include <cstddef>
 
 #include <glm/glm.hpp>
 
@@ -17,15 +18,6 @@ public:
 
 	VertexBuffer(const void* data, uint32_t size);
 
-	// Disable copying 
-	VertexBuffer(const VertexBuffer&) = delete;
-	VertexBuffer& operator=(const VertexBuffer&) = delete;
-
-	// Allowing movement
-	VertexBuffer(VertexBuffer&& other) noexcept;
-	VertexBuffer& operator=(VertexBuffer&& other) noexcept;
-
-
 	template<typename T>
 	static std::shared_ptr<VertexBuffer> Create(const std::vector<T>& data)
 	{
@@ -37,9 +29,19 @@ public:
 		: VertexBuffer(data.data(), static_cast<uint32_t>(data.size() * sizeof(T)), BufferLayoutTraits<T>::Get())
 	{}
 
-	VertexBuffer(const void* data, uint32_t size, const VertexBufferLayout& layout = {});
+	VertexBuffer(const void* data, uint32_t size, VertexBufferLayout layout);
 
 	~VertexBuffer();
+
+
+
+	// Disable copying 
+	VertexBuffer(const VertexBuffer&) = delete;
+	VertexBuffer& operator=(const VertexBuffer&) = delete;
+
+	// Allowing movement
+	VertexBuffer(VertexBuffer&& other) noexcept;
+	VertexBuffer& operator=(VertexBuffer&& other) noexcept;
 
 
 	void Release();
@@ -84,42 +86,24 @@ private:
 
 
 
-
-
-
-
-
-
-
-
-
-//////
-
-enum class BufferType
-{
-	Position = 0,
-	TexCoord,
-	Count
-};
-
-
-class MultiVertexBuffer
+class UniformBuffer
 {
 public:
+	explicit UniformBuffer(uint32_t size);
+	~UniformBuffer();
 
-	MultiVertexBuffer();
-	~MultiVertexBuffer();
+	UniformBuffer(const UniformBuffer&) = delete;
+	UniformBuffer& operator=(const UniformBuffer&) = delete;
 
+	UniformBuffer(UniformBuffer&&) = delete;
+	UniformBuffer& operator=(UniformBuffer&&) = delete;
 
-
-
-	void SetData(BufferType type, const void* data, uint32_t size);
-	void SetLayout(BufferType type, VertexAttribute vertexAttribute);
-
-	uint32_t GetID(BufferType type) const { return m_Buffers[static_cast<size_t>(type)]; }
-	const VertexBufferLayout& GetLayout(BufferType type) const { return m_Layouts[static_cast<size_t>(type)]; }
+	void SetData(std::span<const std::byte> data) const;
+	void Bind(uint32_t bindingPoint) const;
 
 private:
-	uint32_t m_Buffers[static_cast<size_t>(BufferType::Count)];
-	VertexBufferLayout m_Layouts[static_cast<size_t>(BufferType::Count)];
+	uint32_t m_ID = 0;
+	uint32_t m_Size = 0;
 };
+
+
