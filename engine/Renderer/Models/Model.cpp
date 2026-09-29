@@ -51,6 +51,8 @@ Model::Model(ModelData data)
 {
 	ValidateModelData(data);
 
+	m_Instances = std::move(data.Instances);
+
 	// move Mesh Data to m_Meshes
 	m_Meshes.reserve(data.Meshes.size());
 

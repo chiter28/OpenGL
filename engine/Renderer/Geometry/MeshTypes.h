@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <glm/glm.hpp>
 
 #include "Renderer/Resources/Layout.h"
 
@@ -18,4 +19,13 @@ struct SubMesh
 	uint32_t IndexCount = 0;
 	uint32_t VertexOffset = 0;
 	uint32_t MaterialIndex = InvalidMaterialIndex;
+};
+
+
+struct MeshInstance
+{
+	size_t MeshIndex = 0;
+
+	// Transforms mesh coordinates into model coordinates.
+	glm::mat4 Transform = { 1.0f };
 };

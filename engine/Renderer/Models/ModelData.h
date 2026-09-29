@@ -5,7 +5,6 @@
 #include <filesystem>
 #include <limits>
 
-#include "Renderer/Resources/Layout.h"
 #include "Renderer/Geometry/MeshTypes.h"
 #include "Renderer/Resources/TextureTypes.h"
 
@@ -77,6 +76,7 @@ struct MeshData
 	std::vector<ModelVertex> Vertices;
 	std::vector<uint32_t> Indices;
 	std::vector<SubMesh> SubMeshes;
+
 };
 
 
@@ -92,6 +92,8 @@ struct MeshData
 struct ModelData
 {
 	std::vector<MeshData> Meshes;
+	std::vector<MeshInstance> Instances;
+
 	std::vector<MaterialData> Materials;
 	std::vector<TextureData> Textures;
 };

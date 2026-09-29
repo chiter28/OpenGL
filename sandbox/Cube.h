@@ -1,10 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <iostream>
 #include <array>
 #include <algorithm>
 
+
 #include <glm/glm.hpp>
+
 
 #include "Core/Sandbox.h"
 #include "Core/Input.h"
@@ -16,7 +19,7 @@
 #include "Renderer/Geometry/Primitives.h"
 
 
-
+#include "Renderer/Loader/glTFLoader.h"
 
 
 
@@ -28,46 +31,72 @@ public:
 
 	void OnAttach() override
 	{
-		
-		ModelData data;
+		ModelData modelData;
+		try
+		{
+			modelData = glTFLoader::LoadScene("Resources/meshes/wine_barrel_01_4k.gltf");
 
-		// mesh
-		MeshData meshData = Primitives::CreateSphereMesh(1.0f, 7, 64);
-		data.Meshes.emplace_back(std::move(meshData));
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "glTF loading failed: " << e.what() << "\nUsing a fallback cube\n";
 
-		// Metallic Roughness Texture
-		const uint32_t metallicRoughnessTextureIndex = static_cast<uint32_t>(data.Textures.size());
-		data.Textures.emplace_back(
-			TextureData
-			{
-				.Data =
-					RawTextureData
-					{
-						.Pixels = {	0, 255, 255, 255 },
-						.Width = 1,
-						.Height = 1
-					},
-				.ColorSpace = TextureColorSpace::Linear
-			}
-		);
+			size_t meshIndex = modelData.Meshes.size();
+			
+			modelData.Meshes.emplace_back(Primitives::CreateCubeMesh(1.0f));
+			modelData.Materials.emplace_back(MaterialData{});
+
+			modelData.Instances.emplace_back(
+				MeshInstance
+				{
+					.MeshIndex = meshIndex,
+					.Transform = glm::mat4{ 1.0f }
+				}
+			);
+		}
+
+		m_Model = std::make_shared<Model>(std::move(modelData));
+
+
+		//ModelData data;
+
+		//// mesh
+		//MeshData meshData = Primitives::CreateSphereMesh(1.0f, 7, 64);
+		//data.Meshes.emplace_back(std::move(meshData));
+
+		//// Metallic Roughness Texture
+		//const uint32_t metallicRoughnessTextureIndex = static_cast<uint32_t>(data.Textures.size());
+		//data.Textures.emplace_back(
+		//	TextureData
+		//	{
+		//		.Data =
+		//			RawTextureData
+		//			{
+		//				.Pixels = {	0, 255, 255, 255 },
+		//				.Width = 1,
+		//				.Height = 1
+		//			},
+		//		.ColorSpace = TextureColorSpace::Linear
+		//	}
+		//);
 
 
 
 
-		// material
-		data.Materials.emplace_back(
-			MaterialData
-			{
-				.BaseColor = glm::vec4(1.0f),
-				.Metallic = 1.0f,
-				.Roughness = 0.1f,
-				.MetallicRoughnessTextureIndex = metallicRoughnessTextureIndex
-			}
-		);
+		//// material
+		//data.Materials.emplace_back(
+		//	MaterialData
+		//	{
+		//		.BaseColor = glm::vec4(1.0f),
+		//		.Metallic = 1.0f,
+		//		.Roughness = 0.1f,
+		//		.MetallicRoughnessTextureIndex = metallicRoughnessTextureIndex
+		//	}
+		//);
 
-		m_Model = std::make_shared<Model>(std::move(data));
-		
+		//
 		m_Light = std::make_shared<DirectionalLight>();
+		Renderer3D::SetDebugView(Renderer3D::DebugView::Normals);
 	}
 
 	void OnRender(Camera& camera) override
@@ -81,6 +110,26 @@ public:
 
 		SetLightDirection();
 	
+		if (Input::IsKeyPressed(GLFW_KEY_1))
+		{
+			Renderer3D::SetDebugView(Renderer3D::DebugView::Lit);
+		}
+		if (Input::IsKeyPressed(GLFW_KEY_2))
+		{
+			Renderer3D::SetDebugView(Renderer3D::DebugView::BaseColor);
+		}
+		if (Input::IsKeyPressed(GLFW_KEY_3))
+		{
+			Renderer3D::SetDebugView(Renderer3D::DebugView::Normals);
+		}
+		if (Input::IsKeyPressed(GLFW_KEY_4))
+		{
+			Renderer3D::SetDebugView(Renderer3D::DebugView::Metallic);
+		}
+		if (Input::IsKeyPressed(GLFW_KEY_5))
+		{
+			Renderer3D::SetDebugView(Renderer3D::DebugView::Roughness);
+		}
 		
 		Renderer3D::BeginScene(camera, *m_Light);
 		Renderer3D::DrawModel(m_Model, model);

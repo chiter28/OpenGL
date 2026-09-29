@@ -5,6 +5,14 @@
 
 void ValidateModelData(const ModelData& data)
 {
+	// MeshIndex не больше количества Meshes
+	for (size_t i = 0; i < data.Instances.size(); ++i)
+	{
+		if (data.Instances[i].MeshIndex >= data.Meshes.size())
+		{
+			throw std::invalid_argument("Mesh instance " + std::to_string(i) + ": mesh index is invalid");
+		}
+	}
 
 	// Проверка MeshData на валидность
 	for (size_t meshIndex = 0; meshIndex < data.Meshes.size(); ++meshIndex)
@@ -33,6 +41,7 @@ void ValidateModelData(const ModelData& data)
 			// Индекс материала не больше чем самых Метериалов
 			if (subMesh.MaterialIndex >= data.Materials.size())
 				throw std::invalid_argument(prefix + "material index is invalid");
+
 
 			for (size_t i = 0; i < subMesh.IndexCount; ++i)
 			{

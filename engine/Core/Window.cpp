@@ -8,6 +8,21 @@
 
 
 
+#ifndef NDEBUG
+    namespace
+    {
+        void APIENTRY OpenGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) noexcept
+        {
+            std::cerr << "[OpenGL] id=" << id
+                      << " source=0x" << std::hex << source
+                      << " type=0x" << type
+                      << " severity=0x" << severity
+                      << std::dec << '\n';
+            std::cerr.write(message, length);
+            std::cerr << '\n';
+        }
+    }
+#endif // !NDEBUG
 
 
 
@@ -28,6 +43,10 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
     
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
+#ifndef NDEBUG
+    glfwWindowHint(GLFW_CONTEXT_DEBUG, GLFW_TRUE);
+#endif // !NDEBUG
+
 
     m_Window = glfwCreateWindow(m_Width, m_Height, name, nullptr, nullptr);
 
@@ -42,6 +61,27 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
         std::cerr << "Failed to init GLAD" << std::endl;
         return;
     }
+
+
+#ifndef NDEBUG
+    GLint contextFlags = 0;
+    glGetIntegerv(GL_CONTEXT_FLAGS, &contextFlags);
+
+    if (contextFlags & GL_CONTEXT_FLAG_DEBUG_BIT)
+    {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+        glDebugMessageCallback(OpenGLDebugCallback, nullptr);
+
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+    }
+    else
+    {
+        std::fprintf(stderr, "OpenGL debug context is not active\n");
+    }
+#endif // !NDEBUG
 
    
 

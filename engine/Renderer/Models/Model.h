@@ -34,6 +34,8 @@ public:
 	void AddMesh(Mesh mesh);
 	void AddMaterial(std::shared_ptr<Material> material);
 
+	const std::vector<MeshInstance>& GetInstances() const noexcept { return m_Instances; }
+	
 	// Get
 	const std::vector<Mesh>& GetMeshes() const noexcept { return m_Meshes; }
 	const std::vector<std::shared_ptr<Material>>& GetMaterials() const noexcept { return m_Materials; }
@@ -44,5 +46,6 @@ public:
 
 private:
 	std::vector<Mesh> m_Meshes;
+	std::vector<MeshInstance> m_Instances;
 	std::vector<std::shared_ptr<Material>> m_Materials;
 };

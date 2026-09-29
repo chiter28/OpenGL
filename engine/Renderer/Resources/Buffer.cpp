@@ -17,6 +17,14 @@ void VertexBuffer::SetLayout(const std::initializer_list<VertexAttribute>& verte
 	m_Layout = VertexBufferLayout{ vertexElements };
 }
 
+void VertexBuffer::SetDebugName(const char* name) const
+{
+	if (m_ID != 0)
+	{
+		glObjectLabel(GL_BUFFER, m_ID, -1, name);
+	}
+}
+
 
 
 
@@ -99,6 +107,14 @@ void IndexBuffer::Release()
 	}
 }
 
+void IndexBuffer::SetDebugName(const char* name) const
+{
+	if (m_ID != 0)
+	{
+		glObjectLabel(GL_BUFFER, m_ID, -1, name);
+	}
+}
+
 IndexBuffer::~IndexBuffer()
 {
 	Release();
@@ -143,4 +159,12 @@ void UniformBuffer::SetData(std::span<const std::byte> data) const
 void UniformBuffer::Bind(uint32_t bindingPoint) const
 {
 	glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, m_ID);
+}
+
+void UniformBuffer::SetDebugName(const char* name) const
+{
+	if (m_ID != 0)
+	{
+		glObjectLabel(GL_BUFFER, m_ID, -1, name);
+	}
 }

@@ -51,6 +51,9 @@ public:
 	uint32_t GetID() const { return m_ID; }
 	const VertexBufferLayout& GetLayout() const { return m_Layout; }
 
+
+	void SetDebugName(const char* name) const;
+
 private:
 	uint32_t m_ID = 0;
 	VertexBufferLayout m_Layout;
@@ -78,6 +81,9 @@ public:
 	void Release();
 	uint32_t GetID() const { return m_ID; }
 
+
+	void SetDebugName(const char* name) const;
+
 private:
 	uint32_t m_ID = 0;
 };
@@ -100,6 +106,9 @@ public:
 
 	void SetData(std::span<const std::byte> data) const;
 	void Bind(uint32_t bindingPoint) const;
+
+
+	void SetDebugName(const char* name) const;
 
 private:
 	uint32_t m_ID = 0;

@@ -44,7 +44,7 @@ MaterialBinder::MaterialBinder()
 	: m_WhiteTexture(WhitePixel, 1, 1, TextureColorSpace::Linear),
 	  m_MaterialBuffer(sizeof(MaterialUniformData))
 {
-	
+	m_MaterialBuffer.SetDebugName("Material.Parameters");
 }
 
 

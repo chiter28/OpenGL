@@ -71,6 +71,17 @@ layout(std140) uniform MaterialBlock
 uniform Light u_Light;
 
 
+// Debug
+uniform int u_DebugView;
+
+const int DEBUG_BASE_COLOR = 1;
+const int DEBUG_NORMALS = 2;
+const int DEBUG_METALLIC = 3;
+const int DEBUG_ROUGHNESS = 4;
+
+
+
+
 uniform sampler2D u_AlbedoMap;
 uniform sampler2D u_MetallicRoughnessMap;
 
@@ -143,16 +154,40 @@ void main()
 {
 
 	vec4 baseColor = texture(u_AlbedoMap, TexCoord) * u_Material.BaseColor; 
-
 	vec4 metallic_roughness = texture(u_MetallicRoughnessMap, TexCoord);
 		
 	float metallic = u_Material.Metallic * metallic_roughness.b;
 	float roughness = u_Material.Roughness * metallic_roughness.g;
 	
+	vec3 N = normalize(Normal);
+	
+
+	// Debug
+	if (u_DebugView == DEBUG_BASE_COLOR)
+	{
+		FragColor = vec4(baseColor.rgb, 1.0);
+		return;
+	}
+	if (u_DebugView == DEBUG_NORMALS)
+	{
+		FragColor = vec4(N * 0.5 + 0.5, 1.0);
+		return;
+	}
+	if (u_DebugView == DEBUG_METALLIC)
+	{
+		FragColor = vec4(vec3(metallic), 1.0);
+		return;
+	}
+	if (u_DebugView == DEBUG_ROUGHNESS)
+	{
+		FragColor = vec4(vec3(roughness), 1.0);
+		return;
+	}
+
+
 
 	vec3 F0 = mix(vec3(0.04), baseColor.rgb, metallic);
 
-	vec3 N = normalize(Normal);
 	vec3 L = normalize(u_Light.Direction);
 	vec3 V = normalize(-FragPos);
 

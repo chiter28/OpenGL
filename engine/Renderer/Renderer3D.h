@@ -35,6 +35,15 @@ public:
         DirectionalLight Light;
     };
 
+    enum class DebugView : int
+    {
+        Lit = 0,
+        BaseColor,
+        Normals,
+        Metallic,
+        Roughness
+    };
+
 public:
     static void Init();
     static void Shutdown();
@@ -42,6 +51,8 @@ public:
     static void BeginScene(const Camera& camera, const DirectionalLight& light);
     static void EndScene();
     static void DrawModel(const std::shared_ptr<Model>& model, const glm::mat4& transform);
+
+    static void SetDebugView(DebugView view) { s_DebugView = view; }
 
 private:
     static void RenderPass(bool transparentPass);
@@ -52,4 +63,7 @@ private:
 
     inline static std::vector<RenderCommand> s_DrawQueue;
     inline static SceneData s_SceneData;
+
+    
+    inline static DebugView s_DebugView = DebugView::Normals;
 };
