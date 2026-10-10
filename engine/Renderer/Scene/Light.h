@@ -20,7 +20,7 @@ class DirectionalLight : public BaseLight
 {
 public:
 	glm::vec3 m_WorldDirection = { -1.0f, 0.0f, 0.0f };
-	float m_Intensity = 0.8f;
+	float m_Intensity = 1.0f;
 
 	virtual void Bind(Shader& shader) const override;
 

@@ -69,10 +69,12 @@ void Shader::SetUniformBlockBinding(const std::string& blockName, uint32_t bindi
 	}
 
 	const GLuint blockIndex = glGetUniformBlockIndex(m_Program, blockName.c_str());
+
 	if (blockIndex == GL_INVALID_INDEX)
 	{
 		throw std::runtime_error("Uniform block not found " + blockName);
 	}
+
 	glUniformBlockBinding(m_Program, blockIndex, bindingPoint);
 }
 

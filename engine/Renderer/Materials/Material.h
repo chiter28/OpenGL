@@ -10,8 +10,10 @@ class Material
 public:
 	glm::vec4 BaseColor{ 1.0f };
 
-	float Metallic = 0.0f;
+	float Metallic = 1.0f;
 	float Roughness = 1.0f;
+
+	float NormalScale = 1.0f;
 
 	glm::vec3 Emissive{ 0.0f };
 

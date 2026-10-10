@@ -25,8 +25,7 @@ struct Color	{ glm::vec3 color; };
 struct TexCoord { glm::vec2 texCoord; };
 struct Normal   { glm::vec3 normal; };
 struct Instance { glm::vec3 instance; };
-struct Tangent  { glm::vec4 tangent; };
-
+struct Tangent  { glm::vec4 tangent{ 0.0f, 0.0f, 0.0f, 1.0f }; };
 
 
 

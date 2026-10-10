@@ -37,6 +37,7 @@ struct TextureData
 {
 	Source Data;
 	TextureColorSpace ColorSpace = TextureColorSpace::Linear;
+	TextureSamplerDescription Sampler = {};
 };
 
 
@@ -53,6 +54,8 @@ struct MaterialData//
 
 	float Metallic = 0.0f;
 	float Roughness = 1.0f;
+
+	float NormalScale = 1.0f;
 
 	glm::vec3 Emissive{ 0.0f };
 

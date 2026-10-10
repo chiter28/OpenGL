@@ -4,10 +4,13 @@ bin/
 out/
 
 
-
 # Файлы проектов Visual Studio
 .vs/
 *.vcxproj*
 *.sln
 .aider*
 .vscode/
+
+
+
+glTF-Sample-Assets-main.zip

@@ -34,7 +34,7 @@ public:
 		ModelData modelData;
 		try
 		{
-			modelData = glTFLoader::LoadScene("Resources/meshes/wine_barrel_01_4k.gltf");
+			modelData = glTFLoader::LoadScene("Resources/meshes/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest.gltf");
 
 		}
 		catch (const std::exception& e)
@@ -58,43 +58,7 @@ public:
 		m_Model = std::make_shared<Model>(std::move(modelData));
 
 
-		//ModelData data;
-
-		//// mesh
-		//MeshData meshData = Primitives::CreateSphereMesh(1.0f, 7, 64);
-		//data.Meshes.emplace_back(std::move(meshData));
-
-		//// Metallic Roughness Texture
-		//const uint32_t metallicRoughnessTextureIndex = static_cast<uint32_t>(data.Textures.size());
-		//data.Textures.emplace_back(
-		//	TextureData
-		//	{
-		//		.Data =
-		//			RawTextureData
-		//			{
-		//				.Pixels = {	0, 255, 255, 255 },
-		//				.Width = 1,
-		//				.Height = 1
-		//			},
-		//		.ColorSpace = TextureColorSpace::Linear
-		//	}
-		//);
-
-
-
-
-		//// material
-		//data.Materials.emplace_back(
-		//	MaterialData
-		//	{
-		//		.BaseColor = glm::vec4(1.0f),
-		//		.Metallic = 1.0f,
-		//		.Roughness = 0.1f,
-		//		.MetallicRoughnessTextureIndex = metallicRoughnessTextureIndex
-		//	}
-		//);
-
-		//
+		
 		m_Light = std::make_shared<DirectionalLight>();
 		Renderer3D::SetDebugView(Renderer3D::DebugView::Normals);
 	}
@@ -106,7 +70,6 @@ public:
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 		model = glm::rotate(model, i, glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-		i += 0.0002f;
 
 		SetLightDirection();
 	

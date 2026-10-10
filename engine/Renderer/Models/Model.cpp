@@ -9,7 +9,7 @@ namespace
 	std::shared_ptr<Texture> CreateTexture(const TextureData& textureData)
 	{
 		return std::visit(
-			[colorSpace = textureData.ColorSpace](const auto& source) -> std::shared_ptr<Texture> // source - FileTextureData, EncodedTextureData, RawTextureData
+			[colorSpace = textureData.ColorSpace, sampler = textureData.Sampler](const auto& source) -> std::shared_ptr<Texture> // source - FileTextureData, EncodedTextureData, RawTextureData
 			{
 				// type? (FileTextureData, EncodedTextureData, RawTextureData)
 				using SourceType = std::decay_t<decltype(source)>;
@@ -19,7 +19,7 @@ namespace
 					// std::filesystem::path Path;
 					if (!std::filesystem::exists(source.Path))
 						return nullptr;
-					return std::make_shared<Texture>(source.Path.string(), colorSpace);
+					return std::make_shared<Texture>(source.Path.string(), colorSpace, sampler);
 				}
 
 				else if constexpr (std::is_same_v<SourceType, EncodedTextureData>)
@@ -27,7 +27,7 @@ namespace
 					// std::vector<std::byte> Bytes;
 					if (source.Bytes.empty())
 						return nullptr;
-					return std::make_shared<Texture>(source.Bytes.data(), static_cast<uint32_t>(source.Bytes.size()), colorSpace);
+					return std::make_shared<Texture>(source.Bytes.data(), static_cast<uint32_t>(source.Bytes.size()), colorSpace, sampler);
 				}
 
 				else if constexpr (std::is_same_v<SourceType, RawTextureData>)
@@ -38,7 +38,7 @@ namespace
 					const uint32_t expectedSize = source.Width * source.Height * 4;
 					if (source.Width == 0 || source.Height == 0 || source.Pixels.size() < expectedSize)
 						return nullptr;
-					return std::make_shared<Texture>(source.Pixels.data(), source.Width, source.Height, colorSpace);
+					return std::make_shared<Texture>(source.Pixels.data(), source.Width, source.Height, colorSpace, sampler);
 				}
 
 			}, textureData.Data);
@@ -97,6 +97,8 @@ Model::Model(ModelData data)
 		
 		material->Metallic = materialData.Metallic;
 		material->Roughness = materialData.Roughness;
+
+		material->NormalScale = materialData.NormalScale;
 
 		material->Emissive = materialData.Emissive;
 

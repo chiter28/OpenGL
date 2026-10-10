@@ -8,7 +8,7 @@
 
 
 
-using ModelVertex = Vertex<Position, Color, TexCoord, Normal>;
+using ModelVertex = Vertex<Position, Color, TexCoord, Normal, Tangent>;
 
 
 struct SubMesh

@@ -6,6 +6,7 @@ layout (location = 1) in vec3 a_Color;
 layout (location = 2) in vec2 a_TexCoord;
 layout (location = 3) in vec3 a_InstanceOffset;
 layout (location = 4) in vec3 a_Normal;
+layout (location = 5) in vec4 a_Tangent;
 
 
 uniform mat4 u_Model; 
@@ -14,8 +15,10 @@ uniform mat4 u_Projection;
 uniform mat3 u_NormalMatrix;
 
 out vec3 FragPos;
-out vec3 Normal;
 out vec2 TexCoord;
+out vec3 Normal;
+out vec3 Tangent;
+out vec3 Bitangent;
 
 void main()
 {
@@ -24,9 +27,30 @@ void main()
 
 	// sent to fragment shader
 	FragPos = vec3(viewPos);
-	Normal = u_NormalMatrix * a_Normal;
 	TexCoord = a_TexCoord;
-		
+	Normal = u_NormalMatrix * a_Normal;
+
+	
+	// Tangent
+	mat3 meshToView = mat3(u_View * u_Model);
+	vec3 T = meshToView * a_Tangent.xyz;
+	
+	vec3 N = normalize(Normal);
+	T -= N * dot(T, N);
+	T = normalize(T);
+
+
+	// Bitangent
+	float orientationSign = sign(determinant(meshToView)); // учитывает отражение при преобразовании объекта
+	float signB = a_Tangent.w * orientationSign;
+	vec3 B = cross(N, T) * signB;
+
+
+	
+	Tangent = T;
+	Bitangent = B;
+
+
 	gl_Position = u_Projection * viewPos;
 }
 
@@ -46,9 +70,10 @@ layout (location = 0) out vec4 FragColor;
 
 // Input variables
 in vec3 FragPos;
-in vec3 Normal;
 in vec2 TexCoord;
-
+in vec3 Normal;
+in vec3 Tangent;
+in vec3 Bitangent;
 
 // Structs
 struct Light
@@ -65,6 +90,8 @@ layout(std140) uniform MaterialBlock
 	vec4 BaseColor;
 	float Metallic;
 	float Roughness;
+	float NormalScale;
+	int HasNormalMap;
 } u_Material;
 
 // Uniforms
@@ -84,6 +111,7 @@ const int DEBUG_ROUGHNESS = 4;
 
 uniform sampler2D u_AlbedoMap;
 uniform sampler2D u_MetallicRoughnessMap;
+uniform sampler2D u_NormalMap;
 
 
 // Constants
@@ -155,12 +183,42 @@ void main()
 
 	vec4 baseColor = texture(u_AlbedoMap, TexCoord) * u_Material.BaseColor; 
 	vec4 metallic_roughness = texture(u_MetallicRoughnessMap, TexCoord);
-		
+
+
 	float metallic = u_Material.Metallic * metallic_roughness.b;
 	float roughness = u_Material.Roughness * metallic_roughness.g;
-	
+
+	// normal
 	vec3 N = normalize(Normal);
 	
+
+	// normal mapping
+	if (u_Material.HasNormalMap != 0)
+	{
+		// tangent
+		vec3 T = Tangent;
+		T -= N * dot(T, N);
+		T = normalize(T);
+
+		// bitangent
+		vec3 B = cross(N, T);
+		if (dot(B, Bitangent) < 0.0)
+		{
+			B = -B;
+		}
+
+		// TBN matrix
+		mat3 TBN = mat3(T, B, N);
+		
+		// get Normal Map
+		vec3 normalRGB = texture(u_NormalMap, TexCoord).rgb;
+		vec3 normalTS = normalRGB * 2.0 - 1.0;
+		normalTS.xy *= u_Material.NormalScale;
+
+
+		// Apply TBN to normal
+		N = normalize(TBN * normalTS);
+	}
 
 	// Debug
 	if (u_DebugView == DEBUG_BASE_COLOR)
@@ -170,6 +228,7 @@ void main()
 	}
 	if (u_DebugView == DEBUG_NORMALS)
 	{
+		// Normals - (-1.0, 1.0) -> (0.0, 1.0)
 		FragColor = vec4(N * 0.5 + 0.5, 1.0);
 		return;
 	}
