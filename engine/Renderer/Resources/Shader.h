@@ -1,16 +1,22 @@
 #pragma once
-#include <glad/glad.h>
 
-#include <string>
 #include <unordered_map>
+#include <array>
+#include <string>
+#include <utility>
 #include <cstdint>
 
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 
 class Shader
 {
 public:
-	explicit Shader(const std::string& filePath);
+
+	explicit Shader(const std::string& vertexPath, const std::string& fragmentPath);
+	~Shader();
+
+
 
 	Shader(const Shader&) = delete;
 	Shader& operator=(const Shader&) = delete;
@@ -19,13 +25,19 @@ public:
 	Shader& operator=(Shader&& other) noexcept;
 
 
-	~Shader();
+
 	void Bind() const;
 	void Unbind() const;
 
+
+
 	void Release();
 
+
+
 	void SetUniformBlockBinding(const std::string& blockName, uint32_t bindingPoint) const;
+
+
 
 	void SetFloat(const std::string& name, float fval);
 	void SetInt(const std::string& name, int ival);
@@ -35,10 +47,11 @@ public:
 	void SetMat3(const std::string& name, const glm::mat3& mat3);
 
 private:
+	using StageSource = std::pair<GLenum, std::string>;
+
 	std::string ReadFile(const std::string& filePath);
 	
-	std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
-	void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
+	void Compile(const std::array<StageSource, 2>& shaderSources);
 
 	int GetUniformLocation(const std::string& name) const;
 

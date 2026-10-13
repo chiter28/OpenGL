@@ -3,7 +3,7 @@
 #include "Window.h"
 #include "Renderer/Scene/Camera.h"
 #include "Events/EventQueue.h"
-#include "Core/Sandbox.h"
+#include "Core/Demo.h"
 
 class App
 {
@@ -17,12 +17,12 @@ public:
 
 
 	template<typename T>
-	void SetSandbox()
+	void SetDemo()
 	{
-		if (m_CurrentSandbox)
-			m_CurrentSandbox->OnDetach();
-		m_CurrentSandbox = std::make_unique<T>();
-		m_CurrentSandbox->OnAttach();
+		if (m_CurrentDemo)
+			m_CurrentDemo->OnDetach();
+		m_CurrentDemo = std::make_unique<T>();
+		m_CurrentDemo->OnAttach();
 	}
 
 private:
@@ -35,7 +35,7 @@ private:
 	std::unique_ptr<Window> m_Window;
 	std::unique_ptr<Camera> m_Camera;
 
-	std::unique_ptr<Sandbox> m_CurrentSandbox;
+	std::unique_ptr<Demo> m_CurrentDemo;
 
 	EventQueue m_EventQueue;
 

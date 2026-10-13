@@ -24,10 +24,10 @@ App::App()
 
 App::~App()
 {
-	if (m_CurrentSandbox)
+	if (m_CurrentDemo)
 	{
-		m_CurrentSandbox->OnDetach();
-		m_CurrentSandbox.reset();
+		m_CurrentDemo->OnDetach();
+		m_CurrentDemo.reset();
 	}
 	Renderer3D::Shutdown();
 }
@@ -53,7 +53,7 @@ void App::Run()
 			[this](Event& event) {
 				App::OnEvent(event);
 				m_Camera->OnEvent(event);
-				m_CurrentSandbox->OnEvent(event);
+				m_CurrentDemo->OnEvent(event);
 			}
 		);
 
@@ -62,7 +62,7 @@ void App::Run()
 			glClearColor(0.01f, 0.02f, 0.03f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-			m_CurrentSandbox->OnRender(*m_Camera);
+			m_CurrentDemo->OnRender(*m_Camera);
 
 			m_Camera->OnUpdate();
 

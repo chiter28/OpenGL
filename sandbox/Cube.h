@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 
 
-#include "Core/Sandbox.h"
+#include "Core/Demo.h"
 #include "Core/Input.h"
 
 #include "Renderer/Scene/Light.h"
@@ -23,7 +23,7 @@
 
 
 
-class Cube : public Sandbox
+class Cube : public Demo
 {
 public:
 	Cube() = default;

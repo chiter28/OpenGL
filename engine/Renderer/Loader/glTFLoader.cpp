@@ -10,18 +10,107 @@
 #include <variant>
 #include <cmath>
 
-#include <glm/glm.hpp>
+
 
 #include <fastgltf/core.hpp>
-#include <fastgltf/glm_element_traits.hpp>
 #include <fastgltf/tools.hpp>
+#include <fastgltf/glm_element_traits.hpp>
+
+#include <glm/glm.hpp>
 
 #include <mikktspace.h>
+
+
+
+// example
+glm::vec4 CalculateVertexTangent(const ModelVertex& v0, const ModelVertex& v1, const ModelVertex& v2)
+{
+	// Получаем два движения по поверхности
+	const glm::vec3 edge1 = v1.position - v0.position;
+	const glm::vec3 edge2 = v2.position - v0.position;
+
+	// Получаем соответствующие движения в UV
+	const glm::vec2 dUV1 = v1.texCoord - v0.texCoord;
+	const glm::vec2 dUV2 = v2.texCoord - v0.texCoord;
+
+	// Находим оставшееся изменение U
+	const float d = dUV1.x * dUV2.y - dUV2.x * dUV1.y;
+
+	if (!std::isfinite(d) || std::abs(d) <= 0.00000001)
+	{
+		throw std::invalid_argument("Cannot calculate tangent from these UVs");
+	}
+
+	// Убираем изменение V
+	const glm::vec3 directionU = (edge1 * dUV2.y - edge2 * dUV1.y) / d;
+	const glm::vec3 directionV = -(edge1 * dUV2.x - edge2 * dUV1.x) / d;
+
+
+
+	// Получаем единичную нормаль именно вершины 0
+	const float normalLength = glm::length(v0.normal);
+
+	if (!std::isfinite(normalLength) || normalLength <= 0.0f)
+	{
+		throw std::invalid_argument("Vertex normal must be non-zero and finite");
+	}
+
+	const glm::vec3 N = v0.normal / normalLength;
+
+
+
+	// Убираем составляющую вдоль N
+	const glm::vec3 tangentInPlane = directionU - N * glm::dot(directionU, N);
+
+	const float tangentLength = glm::length(tangentInPlane);
+
+	if (!std::isfinite(tangentLength) || tangentLength <= 0.0f)
+	{
+		throw std::invalid_argument("Cannot normalize calculated tangent");
+	}
+
+	const glm::vec3 T = tangentInPlane / tangentLength;
+
+
+
+	// Установим ориентацию B
+	const glm::vec3 candidateB = glm::cross(N, T);
+	const float orientation = glm::dot(candidateB, directionV);
+
+	if (!std::isfinite(orientation) || orientation == 0.0f)
+	{
+		throw std::invalid_argument("Cannot determine tangent orientation");
+	}
+	const float sign = orientation < 0.0f ? -1.0f : 1.0f;
+
+	return glm::vec4(T, sign);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 namespace
 {
 
+	// ============================================================================
+	// MikkTSpace tangent Generation
+	// ============================================================================
+	//
 	struct TangentGenerationData
 	{
 		const MeshData& Mesh;
@@ -29,7 +118,8 @@ namespace
 		std::vector<glm::vec4> CornerTangents;
 	};
 
-	// вспомагательные функции
+
+	
 	TangentGenerationData& GetTangentData(const SMikkTSpaceContext* context)
 	{
 		return *static_cast<TangentGenerationData*>(context->m_pUserData);
@@ -102,9 +192,10 @@ namespace
 		data.CornerTangents[cornerIndex] = glm::vec4(tangent[0], tangent[1], tangent[2], sign);
 	}
 
-	
-	
 
+
+	
+	// Interface with callback functions
 	SMikkTSpaceInterface CreateMikkInterface()
 	{
 		SMikkTSpaceInterface interface{};
@@ -118,9 +209,13 @@ namespace
 		return interface;
 	}
 
+
+
+
+	// Tangent Generation 
 	std::vector<glm::vec4> GenerateCornerTangents(const MeshData& mesh, const SubMesh& range)
 	{
-
+		// Validation of SubMesh
 		if (range.IndexCount == 0 || range.IndexCount % 3 != 0)
 		{
 			throw std::invalid_argument("Tangent generation requires a non-empty triangle list");
@@ -135,7 +230,6 @@ namespace
 		{
 			throw std::out_of_range("SubMesh index range is out of bounds");
 		}
-
 
 		if (range.VertexOffset > mesh.Vertices.size())
 		{
@@ -180,9 +274,7 @@ namespace
 			{
 				throw std::invalid_argument("Vertex normal must be normalized");
 			}
-
 		}
-
 
 
 		// Generation
@@ -207,72 +299,6 @@ namespace
 
 
 
-	glm::vec4 CalculateVertexTangent(const ModelVertex& v0, const ModelVertex& v1, const ModelVertex& v2)
-	{
-		// Получаем два движения по поверхности
-		const glm::vec3 edge1 = v1.position - v0.position;
-		const glm::vec3 edge2 = v2.position - v0.position;
-
-		// Получаем соответствующие движения в UV
-		const glm::vec2 dUV1 = v1.texCoord - v0.texCoord;
-		const glm::vec2 dUV2 = v2.texCoord - v0.texCoord;
-
-		// Находим оставшееся изменение U
-		const float d = dUV1.x * dUV2.y - dUV2.x * dUV1.y;
-
-		if (!std::isfinite(d) || std::abs(d) <= 0.00000001)
-		{
-			throw std::invalid_argument("Cannot calculate tangent from these UVs");
-		}
-
-		// Убираем изменение V
-		const glm::vec3 directionU =  (edge1 * dUV2.y - edge2 * dUV1.y) / d;
-		const glm::vec3 directionV = -(edge1 * dUV2.x - edge2 * dUV1.x) / d;
-		
-
-
-
-		// Получаем единичную нормаль именно вершины 0
-		const float normalLength = glm::length(v0.normal);
-
-		if (!std::isfinite(normalLength) || normalLength <= 0.0f)
-		{
-			throw std::invalid_argument("Vertex normal must be non-zero and finite");
-		}
-
-		const glm::vec3 N = v0.normal / normalLength;
-
-
-
-
-		// Убираем составляющую вдоль N
-		const glm::vec3 tangentInPlane = directionU - N * glm::dot(directionU, N);
-
-		const float tangentLength = glm::length(tangentInPlane);
-
-		if (!std::isfinite(tangentLength) || tangentLength <= 0.0f)
-		{
-			throw std::invalid_argument("Cannot normalize calculated tangent");
-		}
-
-		const glm::vec3 T = tangentInPlane / tangentLength;
-
-
-
-
-		// Установим ориентацию B
-		const glm::vec3 candidateB = glm::cross(N, T);
-		const float orientation = glm::dot(candidateB, directionV);
-
-		if (!std::isfinite(orientation) || orientation == 0.0f)
-		{
-			throw std::invalid_argument("Cannot determine tangent orientation");
-		}
-		const float sign = orientation < 0.0f ? -1.0f : 1.0f;
-
-		return glm::vec4(T, sign);
-
-	}
 
 
 
@@ -280,6 +306,17 @@ namespace
 
 
 
+
+
+
+
+
+
+
+	// ============================================================================
+	// MeshData (Vertices, Indices and SubMesh) reading from glTF of 1 SubMesh (primitive)
+	// ============================================================================
+	//
 	void AppendPrimitive(
 		const fastgltf::Asset& asset,
 		const fastgltf::Primitive& primitive,
@@ -341,11 +378,8 @@ namespace
 		}
 
 
-		
-
 		const size_t vertexOffset = destination.Vertices.size();
 		const size_t indexOffset = destination.Indices.size();
-
 
 
 		// Вычеслим сколько вершин можно передать в VertexBuffer при его создании
@@ -369,7 +403,6 @@ namespace
 		{
 			throw std::runtime_error("Combined index buffer is to large");
 		}
-
 
 
 
@@ -498,6 +531,28 @@ namespace
 	
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// ----------------------------------------------------------------------------
+	// Utility functions for Texture reading
+	// ----------------------------------------------------------------------------
+	//
+	// Wrap
 	TextureWrap ReadTextureWrap(const fastgltf::Wrap source)
 	{
 		switch (source)
@@ -514,6 +569,7 @@ namespace
 	}
 
 
+	// Sampler
 	TextureSamplerDescription ReadSampler(const fastgltf::Sampler& source)
 	{
 		TextureSamplerDescription result{};
@@ -571,6 +627,10 @@ namespace
 	}
 
 
+	// ============================================================================
+	// Texture reading from glTF
+	// ============================================================================
+	//
 	uint32_t AppendFileTexture(
 		const fastgltf::Asset& asset,
 		const fastgltf::TextureInfo& info,
@@ -582,7 +642,6 @@ namespace
 		{
 			throw std::runtime_error("This step supports only TEXCOORD_0 without texture transforms");
 		}
-
 
 		const fastgltf::Texture& texture = asset.textures.at(info.textureIndex);
 
@@ -632,6 +691,28 @@ namespace
 	}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// ============================================================================
+	// Material reading from glTF
+	// ============================================================================
+	//
 	MaterialData ReadMaterial(const fastgltf::Material& source)
 	{
 		if (source.alphaMode != fastgltf::AlphaMode::Opaque)
@@ -659,11 +740,33 @@ namespace
 			source.emissiveFactor[2]
 		);
 		
-
 		return result;
 	}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// ----------------------------------------------------------------------------
+	// Transform glTF mat4 to glm::mat4
+	// ----------------------------------------------------------------------------
+	//
 	glm::mat4 Mat4ToGLM(const fastgltf::math::fmat4x4& source)
 	{
 		glm::mat4 result = {1.0f};
@@ -677,8 +780,31 @@ namespace
 		}
 		return result;
 	}
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -686,11 +812,17 @@ namespace
 
 namespace glTFLoader
 {
+
+
+
+
+
+	// ============================================================================
+	// ModelData (Meshes, Materials, Texture, Instances)  generation
+	// ============================================================================
+	//
 	ModelData LoadScene(const std::filesystem::path& path)
 	{
-
-
-
 
 		// прочитать даные из файла и записать себе в file
 		fastgltf::Expected<fastgltf::GltfDataBuffer> file = fastgltf::GltfDataBuffer::FromPath(path);
@@ -742,7 +874,11 @@ namespace glTFLoader
 
 		ModelData data;
 
-		// Material
+
+		// ----------------------------------------------------------------------------
+		// Material and Textures
+		// ----------------------------------------------------------------------------
+		// 
 		if (asset.materials.size() >= std::numeric_limits<uint32_t>::max())
 		{
 			throw std::runtime_error("Too many glTF materials");
@@ -753,12 +889,12 @@ namespace glTFLoader
 		for (const fastgltf::Material& material : asset.materials)
 		{
 
+			// main components
 			MaterialData materialData = ReadMaterial(material);
-
-
+			
 			const fastgltf::PBRData& pbr = material.pbrData;
 
-
+			// BaseColor texture
 			if (pbr.baseColorTexture.has_value())
 			{
 				materialData.BaseColorTextureIndex = AppendFileTexture(
@@ -769,6 +905,7 @@ namespace glTFLoader
 					data);
 			}
 
+			// MetallicRoughness texture
 			if (pbr.metallicRoughnessTexture.has_value())
 			{
 				materialData.MetallicRoughnessTextureIndex = AppendFileTexture(
@@ -778,7 +915,8 @@ namespace glTFLoader
 					TextureColorSpace::Linear,
 					data);
 			}
-
+			
+			// Normal texture
 			if (material.normalTexture.has_value())
 			{
 				const fastgltf::NormalTextureInfo& normalInfo = material.normalTexture.value();
@@ -801,7 +939,14 @@ namespace glTFLoader
 		data.Materials.emplace_back(ReadMaterial(fastgltf::Material{}));
 
 
-		// Mesh
+
+
+
+
+		// ----------------------------------------------------------------------------
+		// Mesh (primitive)
+		// ----------------------------------------------------------------------------
+		// 
 		for (size_t gltfMeshIndex = 0; gltfMeshIndex < asset.meshes.size(); gltfMeshIndex++)
 		{
 			MeshData mesh;
@@ -818,10 +963,19 @@ namespace glTFLoader
 			data.Meshes.emplace_back(std::move(mesh));
 		}
 
+
+
+
+
+		// ----------------------------------------------------------------------------
+		// Instances
+		// ----------------------------------------------------------------------------
+		// 
 		// Обход узлов выбранной сцены и накопление матриц
 		fastgltf::iterateSceneNodes(asset, sceneIndex, fastgltf::math::fmat4x4{ 1.0f },
 			[&](const fastgltf::Node& node, const fastgltf::math::fmat4x4& nodeTransform)
 			{
+				// Validation
 				if (node.skinIndex.has_value())
 				{
 					throw std::runtime_error("Skinned nodes are not supported yet");
@@ -850,6 +1004,8 @@ namespace glTFLoader
 				{
 					throw std::runtime_error("Singular or mirrored node transforms are not supported yet");
 				}
+
+
 
 				data.Instances.emplace_back(
 					MeshInstance

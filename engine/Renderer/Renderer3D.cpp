@@ -11,7 +11,7 @@
 
 void Renderer3D::Init()
 {
-	s_Shader = std::make_shared<Shader>("Resources/shaders/shader.glsl");
+	s_Shader = std::make_shared<Shader>("Resources/shaders/main.vert", "Resources/shaders/main.frag");
 	s_MaterialBinder = std::make_unique<MaterialBinder>();
 
 	s_Shader->Bind();

@@ -1,14 +1,15 @@
 #include "Texture.h"
 
-#include <stb_image.h>
-#include <glad/glad.h>
-
-#include <iostream>
 #include <utility>
 #include <stdexcept>
 #include <algorithm>
+#include <string>
+#include <limits>
+#include <memory>
 
 
+#include <stb_image.h>
+#include <glad/glad.h>
 
 
 namespace
@@ -63,7 +64,6 @@ namespace
 	}
 
 
-
 	GLsizei CalculateMipLevelCount(uint32_t width, uint32_t height)
 	{
 		if (width == 0 || height == 0)
@@ -82,12 +82,24 @@ namespace
 
 		return levels;
 	}
+
+
+
+	using ImagePixels = std::unique_ptr<stbi_uc, decltype(&stbi_image_free)>;
 }
+
+
+
+
+
+
 
 
 Texture::Texture(Texture&& other) noexcept
 	: m_ID(std::exchange(other.m_ID, 0))
 {}
+
+
 
 Texture& Texture::operator=(Texture&& other) noexcept
 {
@@ -98,10 +110,16 @@ Texture& Texture::operator=(Texture&& other) noexcept
 	return *this;
 }
 
+
+
+
 Texture::~Texture()
 {
 	Release();
 }
+
+
+
 
 void Texture::Release()
 {
@@ -113,19 +131,36 @@ void Texture::Release()
 }
 
 
+
+
+
 void Texture::Bind(uint32_t slot) const
 {
 	glBindTextureUnit(slot, m_ID);
 }
+
+
+
 
 void Texture::Unbind(uint32_t slot)
 {
 	glBindTextureUnit(slot, 0);
 }
 
+
+
+
+
+
 // указатель на поток сжатых байт (например, файл PNG/JPG, загруженный в оперативную память)
-Texture::Texture(const std::byte* buffer, uint32_t length, TextureColorSpace colorSpace, TextureSamplerDescription sampler)
+Texture::Texture(const std::byte* buffer, size_t length, TextureColorSpace colorSpace, TextureSamplerDescription sampler)
 {
+
+	if (length > static_cast<size_t>(std::numeric_limits<int>::max()))
+	{
+		throw std::length_error("Encoded texture exceeds decoder(stbi) size limit");
+	}
+
 	// sampler
 	const GLint magFilter = MagFilterToOpenGL(sampler.MagFilter);
 	const GLint minFilter = MinFilterToOpenGL(sampler.MinFilter);
@@ -133,31 +168,29 @@ Texture::Texture(const std::byte* buffer, uint32_t length, TextureColorSpace col
 	const GLint wrapV = WrapToOpenGL(sampler.WrapV);
 
 
-
-
 	int32_t width, height, channels;
 	stbi_set_flip_vertically_on_load(false);
 
-	stbi_uc* imageData = stbi_load_from_memory((const stbi_uc*)(buffer), length, &width, &height, &channels, 4);
-	
-	if (!imageData) {
-		std::cerr << "Texture load (from buffer) failed : " << stbi_failure_reason() << std::endl;
-		return;
-	}
 
+	stbi_uc* data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(buffer), static_cast<int>(length), &width, &height, &channels, 4);
+	ImagePixels	imageData{ data, &stbi_image_free };
+
+	
+	if (!imageData)
+	{
+		const char* reason = stbi_failure_reason();
+		throw std::runtime_error(std::string("Texture load(from buffer) failed: ") + (reason ? reason : "Unknown error"));
+	}
 
 	// MipMaps levels
 	const bool usesMipmaps = minFilter != GL_LINEAR && minFilter != GL_NEAREST;
 	const GLsizei levels = usesMipmaps ? CalculateMipLevelCount(width, height) : 1;
 
 
-
 	// storage data format
 	const GLenum internalFormat_GPU =
 		(colorSpace == TextureColorSpace::sRGB) ? GL_SRGB8_ALPHA8 : GL_RGBA8;  // как хранить на GPU
 	const GLenum dataFormat_CPU = GL_RGBA;     // как лежат данные в CPU
-
-	
 
 
 	glCreateTextures(GL_TEXTURE_2D, 1, &m_ID);
@@ -169,16 +202,19 @@ Texture::Texture(const std::byte* buffer, uint32_t length, TextureColorSpace col
 	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_S, wrapU);
 	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_T, wrapV);
 
-	glTextureSubImage2D(m_ID, 0, 0, 0, width, height, dataFormat_CPU, GL_UNSIGNED_BYTE, imageData);
+	glTextureSubImage2D(m_ID, 0, 0, 0, width, height, dataFormat_CPU, GL_UNSIGNED_BYTE, imageData.get());
 
 	if (usesMipmaps)
 	{
 		glGenerateTextureMipmap(m_ID);
 	}
-
-
-	stbi_image_free(imageData);
 }
+
+
+
+
+
+
 
 
 // копирует готовый массив пикселей в GPU
@@ -219,8 +255,14 @@ Texture::Texture(const uint8_t* data, uint32_t width, uint32_t height, TextureCo
 	{
 		glGenerateTextureMipmap(m_ID);
 	}
-
 }
+
+
+
+
+
+
+
 
 
 
@@ -239,13 +281,15 @@ Texture::Texture(const std::string& path, TextureColorSpace colorSpace, TextureS
 
 	int32_t width, height;
 	int32_t beatsPerPixel;
-	stbi_uc* imageData = stbi_load(path.c_str(), &width, &height, &beatsPerPixel, 4);
+	stbi_uc* data = stbi_load(path.c_str(), &width, &height, &beatsPerPixel, 4);
 
-	if (!imageData) {
-		std::cerr << "Texture load failed from " << path << " - " << stbi_failure_reason() << std::endl;
-		return;
+	ImagePixels imageData{ data, &stbi_image_free };
+
+	if (!imageData)
+	{
+		const char* reason = stbi_failure_reason();
+		throw std::runtime_error(std::string("Texture load failed: ") + path + " - " + (reason ? reason : "Unknown error"));
 	}
-
 
 
 	// MipMaps levels
@@ -268,12 +312,10 @@ Texture::Texture(const std::string& path, TextureColorSpace colorSpace, TextureS
 	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_S, wrapU);
 	glTextureParameteri(m_ID, GL_TEXTURE_WRAP_T, wrapV);
 
-	glTextureSubImage2D(m_ID, 0, 0, 0, width, height, dataFormat_CPU, GL_UNSIGNED_BYTE, imageData); // load image to that memory
+	glTextureSubImage2D(m_ID, 0, 0, 0, width, height, dataFormat_CPU, GL_UNSIGNED_BYTE, imageData.get()); // load image to that memory
 
 	if (usesMipmaps)
 	{
 		glGenerateTextureMipmap(m_ID);
 	}
-
-	stbi_image_free(imageData);
 }

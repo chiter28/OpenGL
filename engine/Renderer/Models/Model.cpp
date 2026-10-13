@@ -1,6 +1,8 @@
 #include "Model.h"
 
 #include <utility> // std::move
+#include <stdexcept>
+
 #include "Renderer/Materials/Material.h"
 
 
@@ -14,30 +16,43 @@ namespace
 				// type? (FileTextureData, EncodedTextureData, RawTextureData)
 				using SourceType = std::decay_t<decltype(source)>;
 
+				
+				// std::filesystem::path Path;
 				if constexpr (std::is_same_v<SourceType, FileTextureData>)
 				{
-					// std::filesystem::path Path;
-					if (!std::filesystem::exists(source.Path))
-						return nullptr;
 					return std::make_shared<Texture>(source.Path.string(), colorSpace, sampler);
 				}
 
+
+				// std::vector<std::byte> Bytes;
 				else if constexpr (std::is_same_v<SourceType, EncodedTextureData>)
 				{
-					// std::vector<std::byte> Bytes;
 					if (source.Bytes.empty())
-						return nullptr;
-					return std::make_shared<Texture>(source.Bytes.data(), static_cast<uint32_t>(source.Bytes.size()), colorSpace, sampler);
+					{
+						throw std::invalid_argument("Encoded texture data must not be empty");
+					}
+					return std::make_shared<Texture>(source.Bytes.data(), source.Bytes.size(), colorSpace, sampler);
 				}
 
+
+				// std::vector<uint8_t> Pixels;
+				// uint32_t Width = 0;
+				// uint32_t Height = 0;
 				else if constexpr (std::is_same_v<SourceType, RawTextureData>)
 				{
-					// std::vector<uint8_t> Pixels;
-					// uint32_t Width = 0;
-					// uint32_t Height = 0;
-					const uint32_t expectedSize = source.Width * source.Height * 4;
-					if (source.Width == 0 || source.Height == 0 || source.Pixels.size() < expectedSize)
-						return nullptr;
+					if (source.Width == 0 || source.Height == 0)
+					{
+						throw std::invalid_argument("Texture dimensions must be positive");
+					}
+
+					constexpr size_t bytesPerPixel = 4;
+					const size_t availablePixels = source.Pixels.size() / bytesPerPixel;
+					const size_t availableRows = availablePixels / source.Width;
+					if (availableRows < source.Height)
+					{
+						throw std::invalid_argument("Texture pixel data is too small");
+					}
+
 					return std::make_shared<Texture>(source.Pixels.data(), source.Width, source.Height, colorSpace, sampler);
 				}
 

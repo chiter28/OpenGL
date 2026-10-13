@@ -1,8 +1,11 @@
-#include <glad/glad.h> // Before glfw3.h
-
 #include "Window.h"
 
 #include <iostream>
+#include <stdexcept>
+
+#include <glad/glad.h> // Before glfw3.h
+
+
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 
@@ -32,9 +35,9 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
     : m_EventQueue(eventQueue), m_Width(width), m_Height(height)
 {
 
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return;
+    if (!glfwInit())
+    {
+        throw std::runtime_error("Failed to initialize GLFW");
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -43,6 +46,7 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
     
     glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
+
 #ifndef NDEBUG
     glfwWindowHint(GLFW_CONTEXT_DEBUG, GLFW_TRUE);
 #endif // !NDEBUG
@@ -50,16 +54,20 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
 
     m_Window = glfwCreateWindow(m_Width, m_Height, name, nullptr, nullptr);
 
-    if (!m_Window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+    if (!m_Window)
+    {
         glfwTerminate();
-        return;
+        throw std::runtime_error("Failed to create GLFW window");
     }
 
     glfwMakeContextCurrent(m_Window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to init GLAD" << std::endl;
-        return;
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        glfwDestroyWindow(m_Window);
+        m_Window = nullptr;
+        glfwTerminate();
+        throw std::runtime_error("Failed to init GLAD");
     }
 
 

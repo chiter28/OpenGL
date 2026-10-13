@@ -3,10 +3,10 @@
 class Camera;
 class Event;
 
-class Sandbox
+class Demo
 {
 public:
-	virtual ~Sandbox() = default;
+	virtual ~Demo() = default;
 	
 	virtual void OnAttach() {}
 

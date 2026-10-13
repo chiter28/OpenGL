@@ -11,7 +11,7 @@ class Texture
 {
 public:
 	Texture() = default;
-	Texture(const std::byte* buffer, uint32_t length, TextureColorSpace colorSpace = TextureColorSpace::Linear, TextureSamplerDescription sampler = {});
+	Texture(const std::byte* buffer, size_t length, TextureColorSpace colorSpace = TextureColorSpace::Linear, TextureSamplerDescription sampler = {});
 	Texture(const uint8_t* data, uint32_t width, uint32_t height, TextureColorSpace colorSpace= TextureColorSpace::Linear, TextureSamplerDescription sampler = {});
 	explicit Texture(const std::string& path, TextureColorSpace colorSpace = TextureColorSpace::Linear, TextureSamplerDescription sampler = {});
 	
