@@ -6,18 +6,20 @@
 #include <algorithm>
 
 
-
 #include <glm/glm.hpp>
 
 
-#include "Core/Demo.h"
+
+#include "Core/Application.h"
 #include "Core/Input.h"
+#include "Core/Demo.h"
 
 #include "Renderer/Scene/Light.h"
 #include "Renderer/Renderer3D.h"
 #include "Renderer/Models/Model.h"
 #include "Renderer/Materials/Material.h"
 #include "Renderer/Geometry/Primitives.h"
+#include "Renderer/UI/UIRenderer.h"
 
 
 #include "Renderer/Loader/glTFLoader.h"
@@ -58,21 +60,67 @@ public:
 
 		m_Model = std::make_shared<Model>(std::move(modelData));
 
-
+		
 		m_Light = std::make_shared<DirectionalLight>();
 		Renderer3D::SetDebugView(Renderer3D::DebugView::Normals);
+
+		m_UiRenderer = std::make_unique<UiRenderer>();
 	}
 
 	void OnUpdate(float deltaTime) override
 	{
-		static float i = 0.0f;
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, i, glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		// slider
+		constexpr float sliderX = 100.0f;
+		constexpr float sliderY = 100.0f;
+		constexpr float sliderWidth = 200.0f;
+		constexpr float sliderHeight = 24.0f;
+
+		const auto [mouseX, mouseY] = Input::GetMousePos();
+		std::cout << mouseX << " " << mouseY << '\n';
+
+		bool hovered = false;
+
+		if (mouseX >= sliderX
+			&& mouseY >= sliderY
+			&& mouseX <= (sliderX + sliderWidth)
+			&& mouseY <= (sliderY + sliderHeight)
+			)
+		{
+			hovered = true;
+		}
+
+		bool leftMouseDown = Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
+		const bool leftMousePressed = leftMouseDown && !m_PrevLeftMouseDown;
+
+		if (!leftMouseDown)
+		{
+			m_SliderDragging = false;
+		}
+
+		if (leftMousePressed && hovered)
+		{
+			m_SliderDragging = true;
+		}
+
+		if (m_SliderDragging)
+		{
+			float t = (mouseX - sliderX) / sliderWidth;
+			t = std::clamp(t, 0.0f, 1.0f);
+
+			const auto& material = m_Model->GetMaterial(0);
+			material->Roughness = t;
+		}
+
+		m_PrevLeftMouseDown = leftMouseDown;
+		
+
+	
+
+
+
 
 		SetLightDirection(deltaTime);
-	
+
 		if (Input::IsKeyPressed(GLFW_KEY_1))
 		{
 			Renderer3D::SetDebugView(Renderer3D::DebugView::Lit);
@@ -95,7 +143,7 @@ public:
 		}
 
 	}
-		
+
 	void OnRender(Camera& camera) override
 	{
 		static float i = 0.0f;
@@ -107,16 +155,20 @@ public:
 		Renderer3D::BeginScene(camera, *m_Light);
 		Renderer3D::DrawModel(m_Model, m_Transform);
 		Renderer3D::EndScene();
+
+		// Draw Slider
+		const Window& window = App::Get().GetWindow();
+		if (window.GetWidth() > 0 && window.GetHeight() > 0)
+		{
+			m_UiRenderer->Begin(static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight()));
+			m_UiRenderer->DrawRect({ 100.0f, 100.0f }, { 200.0f, 24.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+			m_UiRenderer->End();
+		}
+		
 	}
 
 	void SetLightDirection(float deltaTime)
 	{
-		const auto& material = m_Model->GetMaterial(0);
-		float& roughness = material->Roughness;
-		if (Input::IsKeyPressed(GLFW_KEY_O)) roughness += 0.01f;
-		if (Input::IsKeyPressed(GLFW_KEY_L)) roughness -= 0.01f;
-		roughness = std::clamp(roughness, 0.0f, 1.0f);
-
 		constexpr float lightSpeed = 2.0f;
 
 		if (Input::IsKeyPressed(GLFW_KEY_W)) m_Light->m_WorldDirection.y -= lightSpeed * deltaTime;
@@ -129,8 +181,12 @@ public:
 		}
 		
 	}
+	private:
+		bool m_SliderDragging = false;
+		bool m_PrevLeftMouseDown = false;
 
 private:
 	std::shared_ptr<DirectionalLight> m_Light;
 	std::shared_ptr<Model> m_Model;
+	std::unique_ptr<UiRenderer> m_UiRenderer;
 };

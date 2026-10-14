@@ -60,6 +60,8 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
         throw std::runtime_error("Failed to create GLFW window");
     }
 
+    glfwGetWindowSize(m_Window, &m_Width, &m_Height);
+
     glfwMakeContextCurrent(m_Window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -94,12 +96,13 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
    
 
 
+
     int displayWidth, displayHeight;
     glfwGetFramebufferSize(m_Window, &displayWidth, &displayHeight);
     glViewport(0, 0, displayWidth, displayHeight);
     m_EventQueue.Push<WindowResize>(displayWidth, displayHeight);
     
-    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // disable mouse point
+    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // disable mouse point
     glfwSwapInterval(1);
 
 
@@ -114,15 +117,28 @@ Window::Window(uint32_t  width, uint32_t height, const char* name, EventQueue& e
 void Window::SetupCallbacks()
 {
     glfwSetFramebufferSizeCallback(m_Window,
-        [](GLFWwindow* window, int width, int height) {
+        [](GLFWwindow* window, int width, int height)
+        {
             auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
             if (self) {
                 self->m_EventQueue.Push<WindowResize>((int32_t)width, (int32_t)height);
             }
         });
+    
+    glfwSetWindowSizeCallback(m_Window,
+        [](GLFWwindow* window, int width, int height)
+        {
+            auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+            if (self) {
+                self->m_Width = width;
+                self->m_Height = height;
+            }
+        });
 
     glfwSetWindowCloseCallback(m_Window,
-        [](GLFWwindow* window) {
+        [](GLFWwindow* window)
+        {
             auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
             if (self) {
                 self->m_EventQueue.Push<WindowClose>();
@@ -130,7 +146,8 @@ void Window::SetupCallbacks()
         });
 
     glfwSetKeyCallback(m_Window,
-        [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        [](GLFWwindow* window, int key, int scancode, int action, int mods)
+        {
             auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
             if (!self)
                 return;
@@ -143,7 +160,8 @@ void Window::SetupCallbacks()
         });
 
     glfwSetCursorPosCallback(m_Window,
-        [](GLFWwindow* window, double xpos, double ypos) {
+        [](GLFWwindow* window, double xpos, double ypos)
+        {
             auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
             if (!self) {
                 return;
@@ -152,7 +170,8 @@ void Window::SetupCallbacks()
         });
 
     glfwSetScrollCallback(m_Window,
-        [](GLFWwindow* window, double xoffset, double yoffset) {
+        [](GLFWwindow* window, double xoffset, double yoffset)
+        {
             auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
             if (!self) {
                 return;
@@ -161,7 +180,8 @@ void Window::SetupCallbacks()
         });
 
     glfwSetMouseButtonCallback(m_Window,
-        [](GLFWwindow* window, int button, int action, int mods) {
+        [](GLFWwindow* window, int button, int action, int mods)
+        {
             auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
             if (!self) {
                 return;
@@ -172,6 +192,7 @@ void Window::SetupCallbacks()
                 self->m_EventQueue.Push<MouseRelease>(button, (uint8_t)mods);
             }
         });
+   
 
 }
 
