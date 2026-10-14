@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <chrono>
 
 
 #include "Events/EventDispatcher.h"
@@ -43,10 +44,16 @@ void App::Run()
 	//glFrontFace(GL_CCW);
 	//glCullFace(GL_BACK);
 	
-
+	std::chrono::steady_clock::time_point previousTime = std::chrono::steady_clock::now();
 
 	while (m_Running && !m_Window->ShouldClose())
 	{
+		// deltaTime
+		const std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+		const float deltaTime = std::chrono::duration<float>(currentTime - previousTime).count();
+		previousTime = currentTime;
+
+
 		m_Window->PollEvents();
 
 		m_EventQueue.Flush(
@@ -58,13 +65,15 @@ void App::Run()
 		);
 
 
-		if (!m_Minimized) {
+		if (!m_Minimized)
+		{
+			m_Camera->OnUpdate();
+			m_CurrentDemo->OnUpdate(deltaTime);
+			
 			glClearColor(0.01f, 0.02f, 0.03f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+			
 			m_CurrentDemo->OnRender(*m_Camera);
-
-			m_Camera->OnUpdate();
 
 			m_Window->SwapBuffers();
 		}

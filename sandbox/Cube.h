@@ -6,6 +6,7 @@
 #include <algorithm>
 
 
+
 #include <glm/glm.hpp>
 
 
@@ -58,12 +59,11 @@ public:
 		m_Model = std::make_shared<Model>(std::move(modelData));
 
 
-		
 		m_Light = std::make_shared<DirectionalLight>();
 		Renderer3D::SetDebugView(Renderer3D::DebugView::Normals);
 	}
 
-	void OnRender(Camera& camera) override
+	void OnUpdate(float deltaTime) override
 	{
 		static float i = 0.0f;
 		glm::mat4 model = glm::mat4(1.0f);
@@ -71,7 +71,7 @@ public:
 		model = glm::rotate(model, i, glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
-		SetLightDirection();
+		SetLightDirection(deltaTime);
 	
 		if (Input::IsKeyPressed(GLFW_KEY_1))
 		{
@@ -93,13 +93,23 @@ public:
 		{
 			Renderer3D::SetDebugView(Renderer3D::DebugView::Roughness);
 		}
+
+	}
 		
+	void OnRender(Camera& camera) override
+	{
+		static float i = 0.0f;
+		glm::mat4 m_Transform = glm::mat4(1.0f);
+		m_Transform = glm::translate(m_Transform, glm::vec3(0.0f, 0.0f, 0.0f));
+		m_Transform = glm::rotate(m_Transform, i, glm::vec3(0.0f, 1.0f, 0.0f));
+		m_Transform = glm::scale(m_Transform, glm::vec3(1.0f, 1.0f, 1.0f));
+
 		Renderer3D::BeginScene(camera, *m_Light);
-		Renderer3D::DrawModel(m_Model, model);
+		Renderer3D::DrawModel(m_Model, m_Transform);
 		Renderer3D::EndScene();
 	}
 
-	void SetLightDirection() override
+	void SetLightDirection(float deltaTime)
 	{
 		const auto& material = m_Model->GetMaterial(0);
 		float& roughness = material->Roughness;
@@ -107,11 +117,12 @@ public:
 		if (Input::IsKeyPressed(GLFW_KEY_L)) roughness -= 0.01f;
 		roughness = std::clamp(roughness, 0.0f, 1.0f);
 
+		constexpr float lightSpeed = 2.0f;
 
-		if (Input::IsKeyPressed(GLFW_KEY_W)) m_Light->m_WorldDirection.y -= 0.02f;
-		if (Input::IsKeyPressed(GLFW_KEY_S)) m_Light->m_WorldDirection.y += 0.02f;
-		if (Input::IsKeyPressed(GLFW_KEY_D)) m_Light->m_WorldDirection.x -= 0.02f;
-		if (Input::IsKeyPressed(GLFW_KEY_A)) m_Light->m_WorldDirection.x += 0.02f;
+		if (Input::IsKeyPressed(GLFW_KEY_W)) m_Light->m_WorldDirection.y -= lightSpeed * deltaTime;
+		if (Input::IsKeyPressed(GLFW_KEY_S)) m_Light->m_WorldDirection.y += lightSpeed * deltaTime;
+		if (Input::IsKeyPressed(GLFW_KEY_D)) m_Light->m_WorldDirection.x -= lightSpeed * deltaTime;
+		if (Input::IsKeyPressed(GLFW_KEY_A)) m_Light->m_WorldDirection.x += lightSpeed * deltaTime;
 		
 		if (glm::length(m_Light->m_WorldDirection) > 0.0f) {
 			m_Light->m_WorldDirection = glm::normalize(m_Light->m_WorldDirection);
