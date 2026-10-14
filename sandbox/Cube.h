@@ -70,11 +70,6 @@ public:
 	void OnUpdate(float deltaTime) override
 	{
 		// slider
-		constexpr float sliderX = 100.0f;
-		constexpr float sliderY = 100.0f;
-		constexpr float sliderWidth = 200.0f;
-		constexpr float sliderHeight = 24.0f;
-
 		const auto [mouseX, mouseY] = Input::GetMousePos();
 		std::cout << mouseX << " " << mouseY << '\n';
 
@@ -92,6 +87,9 @@ public:
 		bool leftMouseDown = Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 		const bool leftMousePressed = leftMouseDown && !m_PrevLeftMouseDown;
 
+		const auto& material = m_Model->GetMaterial(0);
+		const float thumbLeft = sliderX + material->Roughness * (sliderWidth - thumbWidth);
+		
 		if (!leftMouseDown)
 		{
 			m_SliderDragging = false;
@@ -100,15 +98,27 @@ public:
 		if (leftMousePressed && hovered)
 		{
 			m_SliderDragging = true;
+			if (mouseX >= thumbLeft && mouseX < thumbLeft + thumbWidth)
+			{
+				m_ThumbGrabOffset = mouseX - thumbLeft;
+			}
+			else
+			{
+				m_ThumbGrabOffset = thumbWidth / 2.0f;
+			}
 		}
+
+
 
 		if (m_SliderDragging)
 		{
-			float t = (mouseX - sliderX) / sliderWidth;
-			t = std::clamp(t, 0.0f, 1.0f);
+			const float desiredLeft = mouseX - m_ThumbGrabOffset;
+			float roughness = (desiredLeft - sliderX) / (sliderWidth - thumbWidth);
+			roughness = std::clamp(roughness, 0.0f, 1.0f);
 
-			const auto& material = m_Model->GetMaterial(0);
-			material->Roughness = t;
+
+
+			material->Roughness = roughness;
 		}
 
 		m_PrevLeftMouseDown = leftMouseDown;
@@ -161,7 +171,13 @@ public:
 		if (window.GetWidth() > 0 && window.GetHeight() > 0)
 		{
 			m_UiRenderer->Begin(static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight()));
-			m_UiRenderer->DrawRect({ 100.0f, 100.0f }, { 200.0f, 24.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+			m_UiRenderer->DrawRect({ sliderX, sliderY }, { sliderWidth, sliderHeight }, { 1.0f, 0.0f, 0.0f, 1.0f });
+
+			const auto& material = m_Model->GetMaterial(0);
+
+			const float thumbLeft = sliderX + material->Roughness * (sliderWidth - thumbWidth);
+			m_UiRenderer->DrawRect({ thumbLeft, sliderY }, { thumbWidth, sliderHeight }, { 1.0f, 1.0f, 1.0f, 1.0f });
+
 			m_UiRenderer->End();
 		}
 		
@@ -181,9 +197,17 @@ public:
 		}
 		
 	}
-	private:
+	
+private:
 		bool m_SliderDragging = false;
 		bool m_PrevLeftMouseDown = false;
+
+		static constexpr float sliderX = 100.0f;
+		static constexpr float sliderY = 100.0f;
+		static constexpr float sliderWidth = 200.0f;
+		static constexpr float sliderHeight = 24.0f;
+		static constexpr float thumbWidth = 12.0f;
+		float m_ThumbGrabOffset = 0.0f;
 
 private:
 	std::shared_ptr<DirectionalLight> m_Light;
