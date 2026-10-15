@@ -23,6 +23,9 @@ UiRenderer::UiRenderer()
 
 }
 
+
+
+
 void UiRenderer::Begin(float windowWidth, float windowHeight)
 {
 	m_DepthTestWasEnable = glIsEnabled(GL_DEPTH_TEST) == GL_TRUE;
@@ -43,14 +46,18 @@ void UiRenderer::Begin(float windowWidth, float windowHeight)
 }
 
 
+
+
 void UiRenderer::DrawRect(glm::vec2 position, glm::vec2 size, glm::vec4 color)
 {
-
 	m_Shader->SetVec4("u_Rect", glm::vec4(position, size));
 	m_Shader->SetVec4("u_Color", color);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
+
+
+
 
 
 void UiRenderer::End()
