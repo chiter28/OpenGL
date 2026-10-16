@@ -39,7 +39,7 @@ public:
 		ModelData modelData;
 		try
 		{
-			modelData = glTFLoader::LoadScene("Resources/meshes/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest.gltf");
+			modelData = glTFLoader::LoadScene("Resources/meshes/wine_barrel/wine_barrel_01_4k.gltf");
 
 		}
 		catch (const std::exception& e)
@@ -68,6 +68,9 @@ public:
 
 
 		m_UiRenderer = std::make_unique<UiRenderer>();
+
+		m_SliderRoughness = std::make_unique<Slider>(glm::vec2{ 100.0f, 100.0f }, glm::vec2{ 200.0f, 20.0f });
+		m_SliderLightIntensity = std::make_unique<Slider>(glm::vec2{ 100.0f, 200.0f }, glm::vec2{ 200.0f, 20.0f }, 0.0f, 15.0f);
 	}
 
 
@@ -80,7 +83,8 @@ public:
 		auto [mouseX, mouseY] = Input::GetMousePos();
 		bool leftMouseDown = Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
 
-		m_Slider.Update({ mouseX, mouseY }, leftMouseDown, material->Roughness);
+		m_SliderRoughness->Update({ mouseX, mouseY }, leftMouseDown, material->Roughness);
+		m_SliderLightIntensity->Update({ mouseX, mouseY }, leftMouseDown, m_Light->m_Intensity);
 
 
 		SetLightDirection(deltaTime);
@@ -131,7 +135,10 @@ public:
 		if (window.GetWidth() > 0 && window.GetHeight() > 0)
 		{
 			m_UiRenderer->Begin(static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight()));
-			m_Slider.Draw(*m_UiRenderer, m_Model->GetMaterial(0)->Roughness);
+
+			m_SliderRoughness->Draw(*m_UiRenderer, m_Model->GetMaterial(0)->Roughness);
+			m_SliderLightIntensity->Draw(*m_UiRenderer, m_Light->m_Intensity);
+			
 			m_UiRenderer->End();
 		}
 		
@@ -162,5 +169,6 @@ private:
 	std::shared_ptr<DirectionalLight> m_Light;
 	std::shared_ptr<Model> m_Model;
 	std::unique_ptr<UiRenderer> m_UiRenderer;
-	Slider m_Slider;
+	std::unique_ptr<Slider> m_SliderRoughness;
+	std::unique_ptr<Slider> m_SliderLightIntensity;
 };
