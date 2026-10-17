@@ -32,6 +32,8 @@ layout(std140) uniform MaterialBlock
 
 // Uniforms
 uniform Light u_Light;
+uniform float u_Exposure;
+
 
 
 // Debug
@@ -42,9 +44,7 @@ const int DEBUG_NORMALS = 2;
 const int DEBUG_METALLIC = 3;
 const int DEBUG_ROUGHNESS = 4;
 
-
-
-
+// Texture samplers
 uniform sampler2D u_AlbedoMap;
 uniform sampler2D u_MetallicRoughnessMap;
 uniform sampler2D u_NormalMap;
@@ -63,6 +63,7 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
 	
 	return F0 + (vec3(1.0) - F0) * weight;
 }
+
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -116,7 +117,6 @@ float GeometrySmithG1GGX(float NdotV, float roughness)
 
 void main()
 {
-
 	vec4 baseColor = texture(u_AlbedoMap, TexCoord) * u_Material.BaseColor; 
 	vec4 metallic_roughness = texture(u_MetallicRoughnessMap, TexCoord);
 
@@ -124,9 +124,8 @@ void main()
 	float metallic = u_Material.Metallic * metallic_roughness.b;
 	float roughness = u_Material.Roughness * metallic_roughness.g;
 
-	// normal
+
 	vec3 N = normalize(Normal);
-	
 
 	// normal mapping
 	if (u_Material.HasNormalMap != 0)
@@ -151,12 +150,12 @@ void main()
 		vec3 normalTS = normalRGB * 2.0 - 1.0;
 		normalTS.xy *= u_Material.NormalScale;
 
-
 		// Apply TBN to normal
 		N = normalize(TBN * normalTS);
 	}
 
-	// Debug
+
+	// Debug modes
 	if (u_DebugView == DEBUG_BASE_COLOR)
 	{
 		FragColor = vec4(baseColor.rgb, 1.0);
@@ -190,12 +189,12 @@ void main()
 	vec3 diffuseLight =  vec3(0.0, 0.0, 0.0);
 	vec3 specularLight = vec3(0.0, 0.0, 0.0);
 
-	float NdotL = max(dot(N, L), 0.0); // cos(l)
-	float NdotV = max(dot(N, V), 0.0); // cos(l)
+	float NdotL = max(dot(N, L), 0.0); // cos
+	float NdotV = max(dot(N, V), 0.0); // cos
+
 
 	if (NdotL > 0.00001 && NdotV > 0.00001)
 	{
-
 		 // Такую нормаль должна иметь микрогрань, чтобы отразить свет от источника к камере
 		vec3 H = normalize(L + V);
 
@@ -205,13 +204,19 @@ void main()
 		// Плотность распределения микрограней имеющих нормали H
 		float D = DistributionGGX(N, H, roughness);
 
+
+
 		// Коэффициент перекрития луча от поверхности к камере из-за перекрития выпуклостями микрограней
 		// G1 = 1 - не перекривает // G1 = 0 - полностью перекривает
 		float G1V = GeometrySmithG1GGX(NdotV, roughness);
+
 		// Коэффициент перекрития луча от источника к поверхности из-за перекрития выпуклостями микрограней
 		float G1L = GeometrySmithG1GGX(NdotL, roughness);
+
 		// Разделимая модель Смита: учитываем перекрытие в обоих направлениях.
 		float G = G1V * G1L;
+
+
 
 		vec3 lightIrradiance = u_Light.Color * u_Light.Intensity;
 		vec3 specularBRDF = (D * F * G) / (4 * NdotL * NdotV);
@@ -221,15 +226,16 @@ void main()
 		// mix(a, b, t) = a * (1.0 - t) + b * t;
 		vec3 diffuseBRDF = diffuseWeight * baseColor.rgb / PI;
 
-		diffuseLight = diffuseBRDF * lightIrradiance * NdotL;
 		specularLight = specularBRDF * lightIrradiance * NdotL;
-
+		diffuseLight = diffuseBRDF * lightIrradiance * NdotL;
 	}
 
-
 	
-
 	vec3 color = baseColor.rgb * ambientLight + diffuseLight + specularLight; 
-
+	
+	// Exposure
+	color *= u_Exposure;
+	color = color / (1.0 + color);
+	
 	FragColor = vec4(color, baseColor.a);
 }

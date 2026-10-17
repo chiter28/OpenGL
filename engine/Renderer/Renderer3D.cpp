@@ -29,22 +29,22 @@ void Renderer3D::Shutdown()
 	s_Shader.reset();
 }
 
-void Renderer3D::BeginScene(const Camera& camera, const DirectionalLight& light)
+void Renderer3D::BeginScene(const Camera& camera, const DirectionalLight& light, float exposure)
 {
 	s_DrawQueue.clear();
 
 	s_SceneData.ViewMatrix = camera.GetView();
 	s_SceneData.ProjectionMatrix = camera.GetPerspectiveProjection();
 	s_SceneData.Light = light;
+	s_SceneData.Exposure = exposure;
 }
 
 void Renderer3D::EndScene()
 {
 
-	const bool isDataView =
-		s_DebugView == DebugView::Normals ||
-		s_DebugView == DebugView::Metallic ||
-		s_DebugView == DebugView::Roughness;
+	const bool isDataView =	s_DebugView == DebugView::Normals ||
+							s_DebugView == DebugView::Metallic ||
+							s_DebugView == DebugView::Roughness;
 
 	if (isDataView)
 	{
@@ -109,6 +109,7 @@ void Renderer3D::RenderPass(bool transparentPass)
 					s_Shader->Bind();
 
 					s_Shader->SetInt("u_DebugView", static_cast<int>(s_DebugView));
+					s_Shader->SetFloat("u_Exposure", s_SceneData.Exposure);
 
 					s_Shader->SetMat4("u_View", s_SceneData.ViewMatrix);
 					s_Shader->SetMat4("u_Projection", s_SceneData.ProjectionMatrix);

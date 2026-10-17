@@ -71,6 +71,7 @@ public:
 
 		m_SliderRoughness = std::make_unique<Slider>(glm::vec2{ 100.0f, 100.0f }, glm::vec2{ 200.0f, 20.0f });
 		m_SliderLightIntensity = std::make_unique<Slider>(glm::vec2{ 100.0f, 200.0f }, glm::vec2{ 200.0f, 20.0f }, 0.0f, 15.0f);
+		m_SliderExposure = std::make_unique<Slider>(glm::vec2{ 100.0f, 300.0f }, glm::vec2{ 200.0f, 20.0f }, 0.1f, 10.0f);
 	}
 
 
@@ -85,7 +86,7 @@ public:
 
 		m_SliderRoughness->Update({ mouseX, mouseY }, leftMouseDown, material->Roughness);
 		m_SliderLightIntensity->Update({ mouseX, mouseY }, leftMouseDown, m_Light->m_Intensity);
-
+		m_SliderExposure->Update({ mouseX, mouseY }, leftMouseDown, m_Exposure);
 
 		SetLightDirection(deltaTime);
 			
@@ -125,7 +126,7 @@ public:
 		m_Transform = glm::scale(m_Transform, glm::vec3(1.0f, 1.0f, 1.0f));
 
 		// Draw Model
-		Renderer3D::BeginScene(camera, *m_Light);
+		Renderer3D::BeginScene(camera, *m_Light, m_Exposure);
 		Renderer3D::DrawModel(m_Model, m_Transform);
 		Renderer3D::EndScene();
 
@@ -138,7 +139,8 @@ public:
 
 			m_SliderRoughness->Draw(*m_UiRenderer, m_Model->GetMaterial(0)->Roughness);
 			m_SliderLightIntensity->Draw(*m_UiRenderer, m_Light->m_Intensity);
-			
+			m_SliderExposure->Draw(*m_UiRenderer, m_Exposure);
+
 			m_UiRenderer->End();
 		}
 		
@@ -169,6 +171,10 @@ private:
 	std::shared_ptr<DirectionalLight> m_Light;
 	std::shared_ptr<Model> m_Model;
 	std::unique_ptr<UiRenderer> m_UiRenderer;
+
+	float m_Exposure;
+
 	std::unique_ptr<Slider> m_SliderRoughness;
 	std::unique_ptr<Slider> m_SliderLightIntensity;
+	std::unique_ptr<Slider> m_SliderExposure;
 };

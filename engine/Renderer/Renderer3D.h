@@ -33,6 +33,7 @@ public:
         glm::mat4 ViewMatrix;
         glm::mat4 ProjectionMatrix;
         DirectionalLight Light;
+        float Exposure = 1.0f;
     };
 
     enum class DebugView : int
@@ -48,7 +49,7 @@ public:
     static void Init();
     static void Shutdown();
 
-    static void BeginScene(const Camera& camera, const DirectionalLight& light);
+    static void BeginScene(const Camera& camera, const DirectionalLight& light, float exposure);
     static void EndScene();
     static void DrawModel(const std::shared_ptr<Model>& model, const glm::mat4& transform);
 
