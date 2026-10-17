@@ -111,6 +111,15 @@ float GeometrySmithG1GGX(float NdotV, float roughness)
 
 
 
+vec3 ToneMapToReinhard(vec3 x)
+{
+	return x / (1.0 + x);
+}
+
+vec3 ToneMapToACES(vec3 x)
+{
+	return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+}
 
 
 
@@ -235,7 +244,7 @@ void main()
 	
 	// Exposure
 	color *= u_Exposure;
-	color = color / (1.0 + color);
+	color = ToneMapToACES(color);
 	
 	FragColor = vec4(color, baseColor.a);
 }

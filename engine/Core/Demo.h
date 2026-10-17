@@ -14,7 +14,7 @@ public:
 
 	virtual void OnUpdate(float deltaTime) {}
 
-	virtual void OnRender(Camera& camera) {}
+	virtual void OnRender(const Camera& camera) {}
 
 	virtual void OnEvent(Event& event) {}
 };

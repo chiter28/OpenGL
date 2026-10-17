@@ -71,7 +71,7 @@ public:
 
 		m_SliderRoughness = std::make_unique<Slider>(glm::vec2{ 100.0f, 100.0f }, glm::vec2{ 200.0f, 20.0f });
 		m_SliderLightIntensity = std::make_unique<Slider>(glm::vec2{ 100.0f, 200.0f }, glm::vec2{ 200.0f, 20.0f }, 0.0f, 15.0f);
-		m_SliderExposure = std::make_unique<Slider>(glm::vec2{ 100.0f, 300.0f }, glm::vec2{ 200.0f, 20.0f }, 0.1f, 10.0f);
+		m_SliderExposure = std::make_unique<Slider>(glm::vec2{ 100.0f, 300.0f }, glm::vec2{ 200.0f, 20.0f }, 0.5f, 1.0f);
 	}
 
 
@@ -117,7 +117,7 @@ public:
 
 
 
-	void OnRender(Camera& camera) override
+	void OnRender(const Camera& camera) override
 	{
 		static float i = 0.0f;
 		glm::mat4 m_Transform = glm::mat4(1.0f);
@@ -172,7 +172,7 @@ private:
 	std::shared_ptr<Model> m_Model;
 	std::unique_ptr<UiRenderer> m_UiRenderer;
 
-	float m_Exposure;
+	float m_Exposure = 1.0f;
 
 	std::unique_ptr<Slider> m_SliderRoughness;
 	std::unique_ptr<Slider> m_SliderLightIntensity;
