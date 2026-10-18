@@ -102,7 +102,7 @@ void App::OnEvent(Event& event)
 	);
 
 	dispatcher.Dispatch<WindowClose>(
-		[this](WindowClose& e) {
+		[this](WindowClose&) {
 			m_Running = false;
 			return true;
 		}

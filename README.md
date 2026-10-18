@@ -44,7 +44,6 @@ Fetched automatically by CMake (`FetchContent`):
 Bundled in `external/`:
 - glad, stb_image, MikkTSpace
 
-The first configure takes a while because Assimp is built from source.
 
 ### Steps
 ```
@@ -125,5 +124,5 @@ The loader produces `ModelData`, plain CPU data independent of OpenGL. `Model` i
 - [ ] Demo scene with multiple objects and frustum culling
 
 ## Third-party
-- [GLFW](https://www.glfw.org/), [glad](https://github.com/Dav1dde/glad), [GLM](https://github.com/g-truc/glm), [fastgltf](https://github.com/spnda/fastgltf), [Assimp](https://github.com/assimp/assimp), [stb_image](https://github.com/nothings/stb), [MikkTSpace](https://github.com/mmikk/MikkTSpace)
+- [GLFW](https://www.glfw.org/), [glad](https://github.com/Dav1dde/glad), [GLM](https://github.com/g-truc/glm), [fastgltf](https://github.com/spnda/fastgltf), [stb_image](https://github.com/nothings/stb), [MikkTSpace](https://github.com/mmikk/MikkTSpace)
 - Assets: TODO — add source and license for the models and textures in `Resources/`

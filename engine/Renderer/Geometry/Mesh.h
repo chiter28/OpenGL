@@ -11,13 +11,6 @@
 #include "MeshTypes.h"
 
 
-enum class ModelLoaderBackend
-{
-	Auto,
-	Assimp,
-	FastGltf
-};
-
 
 
 

@@ -1,7 +1,7 @@
 #pragma once
 
 class Camera;
-class Event;
+struct Event;
 
 class Demo
 {
@@ -12,9 +12,9 @@ public:
 
 	virtual void OnDetach() {}
 
-	virtual void OnUpdate(float deltaTime) {}
+	virtual void OnUpdate(float) {}
 
-	virtual void OnRender(const Camera& camera) {}
+	virtual void OnRender(const Camera&) {}
 
-	virtual void OnEvent(Event& event) {}
+	virtual void OnEvent(Event&) {}
 };
