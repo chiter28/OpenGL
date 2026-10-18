@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 #include <glad/glad.h> // Before glfw3.h
-
+#include <GLFW/glfw3.h>
 
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
@@ -214,4 +214,9 @@ Window::~Window()
 {
     glfwDestroyWindow(m_Window);
     glfwTerminate();
+}
+
+bool Window::ShouldClose()
+{
+    return glfwWindowShouldClose(m_Window);
 }

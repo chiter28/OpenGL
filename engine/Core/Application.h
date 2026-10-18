@@ -1,9 +1,11 @@
 #pragma once
 #include <memory>
-#include "Window.h"
-#include "Renderer/Scene/Camera.h"
+
 #include "Events/EventQueue.h"
 #include "Core/Demo.h"
+
+class Window;
+class Camera;
 
 class App
 {

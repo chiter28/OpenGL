@@ -1,12 +1,10 @@
 #pragma once
 
-#include <string>
 #include <vector>
 #include <span>
 #include <memory>
 #include <cstddef>
 
-#include <glm/glm.hpp>
 
 #include "Layout.h"
 

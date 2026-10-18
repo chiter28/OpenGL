@@ -4,12 +4,18 @@
 #include <memory>
 #include <chrono>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include "Events/EventDispatcher.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 
 #include "Renderer/Renderer3D.h"
+#include "Renderer/Scene/Camera.h"
+
+#include "Window.h"
+
 
 
 

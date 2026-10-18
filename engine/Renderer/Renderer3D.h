@@ -14,7 +14,6 @@
 #include "Materials/MaterialBinder.h"
 
 class Camera;
-class DirectionalLight;
 class Model;
 class Shader;
 

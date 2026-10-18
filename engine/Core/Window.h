@@ -1,8 +1,10 @@
 #pragma once
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+
 #include <functional>
 #include "Events/EventQueue.h"
+
+struct GLFWwindow;
+
 
 class Window
 {
@@ -22,7 +24,7 @@ public:
 	void PollEvents();
 	void SwapBuffers();
 
-	bool ShouldClose() const { return glfwWindowShouldClose(m_Window); }
+	bool ShouldClose();
 
 
 	GLFWwindow* GetNativeWindow() const { return m_Window; }

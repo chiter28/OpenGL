@@ -6,7 +6,6 @@
 #include <utility>
 #include <cstdint>
 
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 
 class Shader
@@ -47,7 +46,7 @@ public:
 	void SetMat3(const std::string& name, const glm::mat3& mat3);
 
 private:
-	using StageSource = std::pair<GLenum, std::string>;
+	using StageSource = std::pair<uint32_t, std::string>;
 
 	std::string ReadFile(const std::string& filePath);
 	
@@ -56,7 +55,7 @@ private:
 	int GetUniformLocation(const std::string& name) const;
 
 private:
-	GLuint m_Program = 0;
+	uint32_t m_Program = 0;
 	mutable std::unordered_map<std::string, int> m_UniformLocationCache;
 
 };

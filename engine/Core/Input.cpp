@@ -1,5 +1,10 @@
 #include "Input.h"
+
+#include <GLFW/glfw3.h>
+
+
 #include "Application.h"
+#include "Window.h"
 
 bool Input::IsKeyPressed(int keycode)
 {

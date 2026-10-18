@@ -2,8 +2,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include "Events/Event.h"
 
+struct Event;
 
 class Camera
 {

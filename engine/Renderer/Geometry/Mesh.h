@@ -2,9 +2,7 @@
 
 #include <memory>
 #include <vector>
-#include <limits>
 
-#include <glm/glm.hpp>
 
 #include "Renderer/Resources/VertexArray.h"
 
