@@ -1,3 +1,5 @@
+#include "Buffer.h"
+#include "Buffer.h"
 #include <utility>
 
 #include "Buffer.h"
@@ -137,13 +139,30 @@ UniformBuffer::UniformBuffer(uint32_t size)
 	glNamedBufferStorage(m_ID, static_cast<GLsizeiptr>(m_Size), nullptr, GL_DYNAMIC_STORAGE_BIT);
 }
 
-UniformBuffer::~UniformBuffer()
+UniformBuffer::UniformBuffer(UniformBuffer&& other) noexcept
+	: m_ID(std::exchange(other.m_ID, 0))
+	, m_Size(std::exchange(other.m_Size, 0))
+{}
+
+UniformBuffer& UniformBuffer::operator=(UniformBuffer&& other) noexcept
 {
-	if (m_ID != 0)
+	if (this == &other)
 	{
-		glDeleteBuffers(1, &m_ID);
+		return *this;
 	}
+
+	Release();
+
+	m_ID = std::exchange(other.m_ID, 0);
+	m_Size = std::exchange(other.m_Size, 0);
+
+	return *this;
 }
+
+
+
+
+
 
 void UniformBuffer::SetData(std::span<const std::byte> data) const
 {
@@ -158,6 +177,10 @@ void UniformBuffer::SetData(std::span<const std::byte> data) const
 
 void UniformBuffer::Bind(uint32_t bindingPoint) const
 {
+	if (m_ID == 0)
+	{
+		throw std::logic_error("UniformBuffer: Bind called on an empty buffer (release or moved-from)");
+	}
 	glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, m_ID);
 }
 
@@ -167,4 +190,22 @@ void UniformBuffer::SetDebugName(const char* name) const
 	{
 		glObjectLabel(GL_BUFFER, m_ID, -1, name);
 	}
+}
+
+
+
+
+void UniformBuffer::Release()
+{
+	if (m_ID != 0)
+	{
+		glDeleteBuffers(1, &m_ID);
+		m_ID = 0;
+	}
+	m_Size = 0;
+}
+
+UniformBuffer::~UniformBuffer()
+{
+	Release();
 }

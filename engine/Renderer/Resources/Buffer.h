@@ -101,14 +101,15 @@ public:
 	UniformBuffer(const UniformBuffer&) = delete;
 	UniformBuffer& operator=(const UniformBuffer&) = delete;
 
-	UniformBuffer(UniformBuffer&&) = delete;
-	UniformBuffer& operator=(UniformBuffer&&) = delete;
+	UniformBuffer(UniformBuffer&& other) noexcept;
+	UniformBuffer& operator=(UniformBuffer&& other) noexcept;
 
 	void SetData(std::span<const std::byte> data) const;
 	void Bind(uint32_t bindingPoint) const;
 
 
 	void SetDebugName(const char* name) const;
+	void Release();
 
 private:
 	uint32_t m_ID = 0;

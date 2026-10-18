@@ -61,7 +61,7 @@ public:
 		}
 
 		m_Model = std::make_shared<Model>(std::move(modelData));
-
+		 
 		
 		m_Light = std::make_shared<DirectionalLight>();
 		Renderer3D::SetDebugView(Renderer3D::DebugView::Normals);
@@ -89,7 +89,7 @@ public:
 		m_SliderExposure->Update({ mouseX, mouseY }, leftMouseDown, m_Exposure);
 
 		SetLightDirection(deltaTime);
-			
+			 
 		if (Input::IsKeyPressed(GLFW_KEY_1))
 		{
 			Renderer3D::SetDebugView(Renderer3D::DebugView::Lit);
